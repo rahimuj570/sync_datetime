@@ -32,4 +32,9 @@ void main() {
   final timeOnly = DateTime(2020, 1, 1, 14, 30, 0); // Local time
   final combined = SyncDateTime.combine(dateOnly, timeOnly);
   print('Combined Local:   $combined');
+
+  // 7. Serialize DateTime to separate UTC date and time strings
+  final parts = SyncDateTime.toServerParts(localNow);
+  print('Serialized Date:  ${parts.date}');
+  print('Serialized Time:  ${parts.time}');
 }

@@ -227,5 +227,34 @@ void main() {
         );
       });
     });
+
+    group('toServerParts', () {
+      test(
+        'converts local DateTime to UTC and splits into date and time parts',
+        () {
+          final local = DateTime(2026, 8, 2, 12, 0, 0);
+          final result = SyncDateTime.toServerParts(local);
+
+          final expectedUtc = local.toUtc();
+          final expectedIso = expectedUtc.toIso8601String();
+          final split = expectedIso.split('T');
+
+          expect(result.date, split.first);
+          expect(result.time, split.last);
+          expect(result.time.endsWith('Z'), isTrue);
+        },
+      );
+
+      test(
+        'converts UTC DateTime directly into correct date and time parts',
+        () {
+          final utc = DateTime.utc(2026, 8, 2, 14, 30, 15, 123);
+          final result = SyncDateTime.toServerParts(utc);
+
+          expect(result.date, '2026-08-02');
+          expect(result.time, '14:30:15.123Z');
+        },
+      );
+    });
   });
 }

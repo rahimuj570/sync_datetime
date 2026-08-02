@@ -81,7 +81,7 @@ Add the package to your project:
 
 ```yaml
 dependencies:
-  sync_datetime: ^0.1.3
+  sync_datetime: ^0.1.4
 ```
 
 or run:
@@ -99,6 +99,7 @@ dart pub add sync_datetime
 | `toUtc()` | Converts a local `DateTime` to UTC. |
 | `fromUtc()` | Converts a UTC `DateTime` to local time. |
 | `toServer()` | Converts a `DateTime` to a UTC ISO 8601 string for APIs. |
+| `toServerParts()` | Converts a `DateTime` into separate UTC date and time strings. |
 | `fromServer()` | Safely parses UTC server timestamps into local time. |
 | `fromServerParts()` | Parses separate date and time strings from the server. |
 | `combine()` | Combines the date from one `DateTime` with the time from another. |
@@ -194,7 +195,20 @@ final meeting = SyncDateTime.fromServerParts(
 
 ---
 
-## 6. Combine Date & Time
+## 6. Serialize to Separate Server Date & Time Parts
+
+If your API expects separate date and time fields, `toServerParts()` normalizes the input to UTC and returns a `ServerDateTimeParts` object containing individual formatted strings:
+
+```dart
+final parts = SyncDateTime.toServerParts(DateTime.now());
+
+print(parts.date); // e.g. "2026-08-02"
+print(parts.time); // e.g. "09:26:44.250Z"
+```
+
+---
+
+## 7. Combine Date & Time
 
 Create a single `DateTime` from separate date and time values.
 

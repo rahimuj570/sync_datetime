@@ -1,3 +1,9 @@
+## 0.1.4
+
+- Add `toServerParts` static helper method to serialize a `DateTime` into a `ServerDateTimeParts` object (containing separate UTC date and time strings).
+- Export `ServerDateTimeParts` from the main library entry point.
+- Update documentation and example script to showcase `toServerParts`.
+
 ## 0.1.3
 
 - Add `fromServerParts` static helper method to parse separate date and time strings.

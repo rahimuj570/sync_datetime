@@ -1,6 +1,6 @@
 name: sync_datetime
 description: A production-quality Dart package for reliable and predictable DateTime synchronization between clients and servers.
-version: 0.1.3
+version: 0.1.4
 repository: https://github.com/rahimuj570/sync_datetime
 
 environment:

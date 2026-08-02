@@ -1,3 +1,5 @@
+import 'package:sync_datetime/src/models/server_datetime_parts_model.dart';
+
 /// A utility class providing predictable and zero-boilerplate DateTime
 /// synchronization methods.
 ///
@@ -96,8 +98,13 @@ abstract final class SyncDateTime {
     return DateTime.parse(normalized).toLocal();
   }
 
-  /// Combines separate server date and time strings, parses the combined UTC
-  /// timestamp, and converts it to local time.
+  /// Assumes [date] and [time] originate from the same server payload and
+  /// represent a single UTC timestamp.
+  ///
+  /// This method does not validate timezone consistency because the inputs
+  /// are plain strings and do not carry timezone metadata. It simply
+  /// reconstructs a valid ISO 8601 timestamp and delegates parsing to
+  /// [fromServer()].
   ///
   /// This method is a helper for APIs that return date and time as separate
   /// payload fields, preventing the need to manually format string concatenations.
@@ -178,5 +185,31 @@ abstract final class SyncDateTime {
         time.microsecond,
       );
     }
+  }
+
+  /// Converts a [DateTime] into separate UTC date and time strings suitable
+  /// for backend APIs that expect individual fields.
+  ///
+  /// The input is first normalized to UTC before extracting the components.
+  ///
+  /// Example:
+  /// ```dart
+  /// final parts = SyncDateTime.toServerParts(DateTime.now());
+  ///
+  /// api.send(
+  ///   scheduled_date: parts.date,
+  ///   scheduled_time: parts.time,
+  /// );
+  /// ```
+  ///
+  /// Returns a [ServerDateTimeParts].
+  static ServerDateTimeParts toServerParts(DateTime dateTime) {
+    final utc = toUtc(dateTime);
+
+    final iso = utc.toIso8601String();
+
+    final split = iso.split('T');
+
+    return ServerDateTimeParts(date: split.first, time: split.last);
   }
 }
