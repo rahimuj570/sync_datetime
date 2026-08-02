@@ -81,7 +81,7 @@ Add the package to your project:
 
 ```yaml
 dependencies:
-  sync_datetime: ^0.1.1
+  sync_datetime: ^0.1.2
 ```
 
 or run:

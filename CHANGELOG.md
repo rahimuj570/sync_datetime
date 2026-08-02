@@ -1,3 +1,7 @@
+## 0.1.2
+
+- Update README version references and documentation.
+
 ## 0.1.1
 
 - Add repository metadata to `pubspec.yaml`.
