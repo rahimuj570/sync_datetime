@@ -1,3 +1,8 @@
+## 0.1.3
+
+- Add `fromServerParts` static helper method to parse separate date and time strings.
+- Update documentation and example script to showcase `fromServerParts`.
+
 ## 0.1.2
 
 - Update README version references and documentation.

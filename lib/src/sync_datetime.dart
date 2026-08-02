@@ -96,6 +96,35 @@ abstract final class SyncDateTime {
     return DateTime.parse(normalized).toLocal();
   }
 
+  /// Combines separate server date and time strings, parses the combined UTC
+  /// timestamp, and converts it to local time.
+  ///
+  /// This method is a helper for APIs that return date and time as separate
+  /// payload fields, preventing the need to manually format string concatenations.
+  ///
+  /// Example:
+  /// ```dart
+  /// final local = SyncDateTime.fromServerParts(
+  ///   date: '2026-08-02',
+  ///   time: '08:49:50.551Z',
+  /// );
+  /// ```
+  ///
+  /// Returns a new [DateTime] in the local timezone.
+  ///
+  /// Throws [FormatException] if the concatenated result is not a valid ISO 8601 representation.
+  static DateTime fromServerParts({
+    required String date,
+    required String time,
+  }) {
+    final trimmedDate = date.trim();
+    final trimmedTime = time.trim();
+    final separator = trimmedTime.startsWith('T') || trimmedTime.startsWith(' ')
+        ? ''
+        : 'T';
+    return fromServer('$trimmedDate$separator$trimmedTime');
+  }
+
   /// Combines the date components of [date] with the time components of [time].
   ///
   /// Both [date] and [time] must have matching timezone types (both local or

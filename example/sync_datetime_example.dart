@@ -20,7 +20,14 @@ void main() {
   final parsedLocal = SyncDateTime.fromServer('2026-08-02T12:00:00');
   print('Parsed Local:     $parsedLocal');
 
-  // 5. Combine Date and Time components
+  // 5. Parse separate server date and time strings
+  final parsedParts = SyncDateTime.fromServerParts(
+    date: '2026-08-02',
+    time: '08:49:50.551Z',
+  );
+  print('Parsed Parts:     $parsedParts');
+
+  // 6. Combine Date and Time components
   final dateOnly = DateTime(2026, 8, 2); // Local date
   final timeOnly = DateTime(2020, 1, 1, 14, 30, 0); // Local time
   final combined = SyncDateTime.combine(dateOnly, timeOnly);

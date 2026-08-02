@@ -124,6 +124,58 @@ void main() {
       });
     });
 
+    group('fromServerParts', () {
+      test(
+        'combines and parses date and time strings correctly with Z suffix',
+        () {
+          final result = SyncDateTime.fromServerParts(
+            date: '2026-08-02',
+            time: '08:49:50.551Z',
+          );
+          expect(result.isUtc, isFalse);
+          expect(result, DateTime.utc(2026, 8, 2, 8, 49, 50, 551).toLocal());
+        },
+      );
+
+      test(
+        'combines and parses date and time strings correctly with implicit UTC (no suffix)',
+        () {
+          final result = SyncDateTime.fromServerParts(
+            date: '2026-08-02',
+            time: '08:49:50.551',
+          );
+          expect(result.isUtc, isFalse);
+          expect(result, DateTime.utc(2026, 8, 2, 8, 49, 50, 551).toLocal());
+        },
+      );
+
+      test('handles leading T or space in time string gracefully', () {
+        final resultWithT = SyncDateTime.fromServerParts(
+          date: '2026-08-02',
+          time: 'T08:49:50.551Z',
+        );
+        final resultWithSpace = SyncDateTime.fromServerParts(
+          date: '2026-08-02',
+          time: ' 08:49:50.551Z',
+        );
+        expect(resultWithT, DateTime.utc(2026, 8, 2, 8, 49, 50, 551).toLocal());
+        expect(
+          resultWithSpace,
+          DateTime.utc(2026, 8, 2, 8, 49, 50, 551).toLocal(),
+        );
+      });
+
+      test('throws FormatException for invalid component values', () {
+        expect(
+          () => SyncDateTime.fromServerParts(
+            date: 'invalid-date',
+            time: '12:00:00',
+          ),
+          throwsFormatException,
+        );
+      });
+    });
+
     group('combine', () {
       test('combines date and time when both are local', () {
         final date = DateTime(2026, 8, 2, 0, 0, 0);
