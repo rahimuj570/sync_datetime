@@ -1,8 +1,8 @@
 # sync_datetime
 
 [![pub package](https://img.shields.io/pub/v/sync_datetime.svg)](https://pub.dev/packages/sync_datetime)
-[![pub points](https://img.shields.io/pub/points/sync_datetime.svg)](https://pub.dev/packages/sync_datetime/score)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Language: Dart](https://img.shields.io/badge/language-Dart-blue)](https://dart.dev/)
 
 A lightweight, dependency-free Dart package for reliable, predictable, and minimal-boilerplate DateTime synchronization between client applications (local time) and backend servers (UTC).
 
@@ -81,7 +81,7 @@ Add the package to your project:
 
 ```yaml
 dependencies:
-  sync_datetime: ^0.1.0
+  sync_datetime: ^0.1.1
 ```
 
 or run:
