@@ -212,4 +212,462 @@ abstract final class SyncDateTime {
 
     return ServerDateTimeParts(date: split.first, time: split.last);
   }
+
+  /// Returns the start of the current local calendar day.
+  ///
+  /// The returned [DateTime] has its time components set to
+  /// `00:00:00.000`, making it useful for date comparisons,
+  /// filtering, and database queries.
+  ///
+  /// Example:
+  /// ```dart
+  /// final today = SyncDateTime.today();
+  /// ```
+  static DateTime today() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  /// Returns the start of the current UTC calendar day.
+  ///
+  /// The returned [DateTime] is in UTC (`isUtc == true`) with
+  /// its time components set to `00:00:00.000Z`.
+  ///
+  /// Example:
+  /// ```dart
+  /// final todayUtc = SyncDateTime.todayUtc();
+  /// ```
+  static DateTime todayUtc() {
+    final now = DateTime.now().toUtc();
+    return DateTime.utc(now.year, now.month, now.day);
+  }
+
+  /// Returns the current UTC date and time.
+  ///
+  /// This is a convenience wrapper around `DateTime.now().toUtc()`,
+  /// making UTC timestamps easier to obtain when communicating with
+  /// backend services.
+  ///
+  /// Example:
+  /// ```dart
+  /// final now = SyncDateTime.nowUtc();
+  /// print(now.isUtc); // true
+  /// ```
+  static DateTime nowUtc() {
+    return DateTime.now().toUtc();
+  }
+
+  /// Returns a new [DateTime] set to the start of the day (00:00:00.000000)
+  /// for the given [dateTime], preserving its timezone type (UTC or Local).
+  ///
+  /// Example:
+  /// ```dart
+  /// final local = DateTime(2026, 8, 2, 11, 50, 0);
+  /// final start = SyncDateTime.startOfDay(local); // 2026-08-02 00:00:00.000
+  ///
+  /// final utc = DateTime.utc(2026, 8, 2, 11, 50, 0);
+  /// final startUtc = SyncDateTime.startOfDay(utc); // 2026-08-02 00:00:00.000Z
+  /// ```
+  static DateTime startOfDay(DateTime dateTime) {
+    if (dateTime.isUtc) {
+      return DateTime.utc(dateTime.year, dateTime.month, dateTime.day);
+    } else {
+      return DateTime(dateTime.year, dateTime.month, dateTime.day);
+    }
+  }
+
+  /// Returns a new [DateTime] set to the end of the day (23:59:59.999999)
+  /// for the given [dateTime], preserving its timezone type (UTC or Local).
+  ///
+  /// Example:
+  /// ```dart
+  /// final local = DateTime(2026, 8, 2, 11, 50, 0);
+  /// final end = SyncDateTime.endOfDay(local); // 2026-08-02 23:59:59.999999
+  ///
+  /// final utc = DateTime.utc(2026, 8, 2, 11, 50, 0);
+  /// final endUtc = SyncDateTime.endOfDay(utc); // 2026-08-02 23:59:59.999999Z
+  /// ```
+  static DateTime endOfDay(DateTime dateTime) {
+    if (dateTime.isUtc) {
+      return DateTime.utc(
+        dateTime.year,
+        dateTime.month,
+        dateTime.day,
+        23,
+        59,
+        59,
+        999,
+        999,
+      );
+    } else {
+      return DateTime(
+        dateTime.year,
+        dateTime.month,
+        dateTime.day,
+        23,
+        59,
+        59,
+        999,
+        999,
+      );
+    }
+  }
+
+  /// Extracts the date component from [dateTime] and returns it as a string
+  /// formatted as `yyyy-MM-dd` (e.g. '2002-02-06').
+  ///
+  /// Example:
+  /// ```dart
+  /// final date = DateTime(2026, 8, 3, 11, 50, 0);
+  /// final dateStr = SyncDateTime.stripDate(date); // '2026-08-03'
+  /// ```
+  static String stripDate(DateTime dateTime) {
+    final iso = dateTime.toIso8601String();
+    return iso.split('T').first;
+  }
+
+  /// Extracts the time component from [dateTime] and returns it as a string
+  /// (e.g. '17:15:30.000' or '17:15:30.000Z' if UTC), preserving timezone compatibility.
+  ///
+  /// Example:
+  /// ```dart
+  /// final local = DateTime(2026, 8, 3, 17, 15, 30);
+  /// final timeStr = SyncDateTime.stripTime(local); // '17:15:30.000'
+  ///
+  /// final utc = DateTime.utc(2026, 8, 3, 17, 15, 30);
+  /// final timeUtcStr = SyncDateTime.stripTime(utc); // '17:15:30.000Z'
+  /// ```
+  static String stripTime(DateTime dateTime) {
+    final iso = dateTime.toIso8601String();
+    return iso.split('T').last;
+  }
+
+  /// Returns a copy of [dateTime] with the specified fields replaced with new values,
+  /// preserving the timezone type (UTC or Local) of the input.
+  ///
+  /// Example:
+  /// ```dart
+  /// final base = DateTime.utc(2026, 8, 3, 12, 0);
+  /// final updated = SyncDateTime.copyWith(base, year: 2027, hour: 15);
+  /// // 2027-08-03 15:00:00.000Z
+  /// ```
+  static DateTime copyWith(
+    DateTime dateTime, {
+    int? year,
+    int? month,
+    int? day,
+    int? hour,
+    int? minute,
+    int? second,
+    int? millisecond,
+    int? microsecond,
+  }) {
+    if (dateTime.isUtc) {
+      return DateTime.utc(
+        year ?? dateTime.year,
+        month ?? dateTime.month,
+        day ?? dateTime.day,
+        hour ?? dateTime.hour,
+        minute ?? dateTime.minute,
+        second ?? dateTime.second,
+        millisecond ?? dateTime.millisecond,
+        microsecond ?? dateTime.microsecond,
+      );
+    } else {
+      return DateTime(
+        year ?? dateTime.year,
+        month ?? dateTime.month,
+        day ?? dateTime.day,
+        hour ?? dateTime.hour,
+        minute ?? dateTime.minute,
+        second ?? dateTime.second,
+        millisecond ?? dateTime.millisecond,
+        microsecond ?? dateTime.microsecond,
+      );
+    }
+  }
+
+  /// Checks if [a] and [b] represent the same calendar day.
+  ///
+  /// Throws an [ArgumentError] if the input [DateTime] instances have mismatching
+  /// timezone types (one UTC, one local).
+  ///
+  /// Example:
+  /// ```dart
+  /// final first = DateTime(2026, 8, 3, 10, 0);
+  /// final second = DateTime(2026, 8, 3, 23, 59);
+  /// final result = SyncDateTime.isSameDay(first, second); // true
+  /// ```
+  static bool isSameDay(DateTime a, DateTime b) {
+    if (a.isUtc != b.isUtc) {
+      throw ArgumentError(
+        'Both DateTime instances must have the same timezone type. '
+        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
+      );
+    }
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  /// Checks if [a] and [b] represent the same month and year.
+  ///
+  /// Throws an [ArgumentError] if the input [DateTime] instances have mismatching
+  /// timezone types (one UTC, one local).
+  ///
+  /// Example:
+  /// ```dart
+  /// final first = DateTime(2026, 8, 3);
+  /// final second = DateTime(2026, 8, 20);
+  /// final result = SyncDateTime.isSameMonth(first, second); // true
+  /// ```
+  static bool isSameMonth(DateTime a, DateTime b) {
+    if (a.isUtc != b.isUtc) {
+      throw ArgumentError(
+        'Both DateTime instances must have the same timezone type. '
+        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
+      );
+    }
+    return a.year == b.year && a.month == b.month;
+  }
+
+  /// Checks if [a] and [b] represent the same year.
+  ///
+  /// Throws an [ArgumentError] if the input [DateTime] instances have mismatching
+  /// timezone types (one UTC, one local).
+  ///
+  /// Example:
+  /// ```dart
+  /// final first = DateTime(2026, 8, 3);
+  /// final second = DateTime(2026, 12, 31);
+  /// final result = SyncDateTime.isSameYear(first, second); // true
+  /// ```
+  static bool isSameYear(DateTime a, DateTime b) {
+    if (a.isUtc != b.isUtc) {
+      throw ArgumentError(
+        'Both DateTime instances must have the same timezone type. '
+        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
+      );
+    }
+    return a.year == b.year;
+  }
+
+  /// Computes the difference in calendar days between [a] and [b].
+  ///
+  /// Returns a positive integer if [b] is after [a], a negative integer if [b]
+  /// is before [a], and zero if they represent the same day.
+  ///
+  /// Throws an [ArgumentError] if the input [DateTime] instances have mismatching
+  /// timezone types (one UTC, one local).
+  ///
+  /// Example:
+  /// ```dart
+  /// final first = DateTime(2026, 8, 3, 23, 59);
+  /// final second = DateTime(2026, 8, 4, 0, 1);
+  /// final diff = SyncDateTime.daysBetween(first, second); // 1
+  /// ```
+  static int daysBetween(DateTime a, DateTime b) {
+    if (a.isUtc != b.isUtc) {
+      throw ArgumentError(
+        'Both DateTime instances must have the same timezone type. '
+        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
+      );
+    }
+    final aUtc = DateTime.utc(a.year, a.month, a.day);
+    final bUtc = DateTime.utc(b.year, b.month, b.day);
+    return bUtc.difference(aUtc).inDays;
+  }
+
+  /// Returns the number of days in the month of the given [dateTime].
+  ///
+  /// Example:
+  /// ```dart
+  /// final date = DateTime(2026, 2, 1);
+  /// final days = SyncDateTime.daysInMonth(date); // 28
+  /// ```
+  static int daysInMonth(DateTime dateTime) {
+    final year = dateTime.year;
+    final month = dateTime.month;
+    if (month == 2) {
+      return isLeapYear(year) ? 29 : 28;
+    }
+    const days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    return days[month - 1];
+  }
+
+  /// Checks if the given [year] is a leap year.
+  ///
+  /// Example:
+  /// ```dart
+  /// final leap = SyncDateTime.isLeapYear(2024); // true
+  /// final common = SyncDateTime.isLeapYear(2026); // false
+  /// ```
+  static bool isLeapYear(int year) {
+    return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+  }
+
+  /// Computes the number of full years between [a] and [b].
+  ///
+  /// Returns a positive integer if [b] is after [a], a negative integer if [b]
+  /// is before [a], and zero if less than a full year separates them.
+  ///
+  /// Throws an [ArgumentError] if the input [DateTime] instances have mismatching
+  /// timezone types (one UTC, one local).
+  ///
+  /// Example:
+  /// ```dart
+  /// final first = DateTime(2024, 8, 3);
+  /// final second = DateTime(2026, 8, 2);
+  /// final diff = SyncDateTime.differenceInYears(first, second); // 1 (not yet 2 full years)
+  /// ```
+  static int differenceInYears(DateTime a, DateTime b) {
+    if (a.isUtc != b.isUtc) {
+      throw ArgumentError(
+        'Both DateTime instances must have the same timezone type. '
+        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
+      );
+    }
+    int years = b.year - a.year;
+    if (years > 0) {
+      if (b.month < a.month || (b.month == a.month && b.day < a.day)) {
+        years--;
+      }
+    } else if (years < 0) {
+      if (b.month > a.month || (b.month == a.month && b.day > a.day)) {
+        years++;
+      }
+    }
+    return years;
+  }
+
+  /// Computes the difference in calendar days between [a] and [b].
+  ///
+  /// This is a convenience alias for [daysBetween].
+  ///
+  /// Throws an [ArgumentError] if the input [DateTime] instances have mismatching
+  /// timezone types (one UTC, one local).
+  ///
+  /// Example:
+  /// ```dart
+  /// final first = DateTime(2026, 8, 3, 23, 59);
+  /// final second = DateTime(2026, 8, 4, 0, 1);
+  /// final diff = SyncDateTime.differenceInDays(first, second); // 1
+  /// ```
+  static int differenceInDays(DateTime a, DateTime b) {
+    return daysBetween(a, b);
+  }
+
+  /// Computes the difference in whole hours between [a] and [b].
+  ///
+  /// Returns a positive integer if [b] is after [a], a negative integer if [b]
+  /// is before [a], and zero if less than a full hour separates them.
+  ///
+  /// Throws an [ArgumentError] if the input [DateTime] instances have mismatching
+  /// timezone types (one UTC, one local).
+  ///
+  /// Example:
+  /// ```dart
+  /// final first = DateTime(2026, 8, 3, 10, 0);
+  /// final second = DateTime(2026, 8, 3, 12, 30);
+  /// final diff = SyncDateTime.differenceInHours(first, second); // 2
+  /// ```
+  static int differenceInHours(DateTime a, DateTime b) {
+    if (a.isUtc != b.isUtc) {
+      throw ArgumentError(
+        'Both DateTime instances must have the same timezone type. '
+        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
+      );
+    }
+    return b.difference(a).inHours;
+  }
+
+  /// Computes the difference in whole minutes between [a] and [b].
+  ///
+  /// Throws an [ArgumentError] if the input [DateTime] instances have mismatching
+  /// timezone types (one UTC, one local).
+  ///
+  /// Example:
+  /// ```dart
+  /// final first = DateTime(2026, 8, 3, 10, 0);
+  /// final second = DateTime(2026, 8, 3, 10, 45);
+  /// final diff = SyncDateTime.differenceInMinutes(first, second); // 45
+  /// ```
+  static int differenceInMinutes(DateTime a, DateTime b) {
+    if (a.isUtc != b.isUtc) {
+      throw ArgumentError(
+        'Both DateTime instances must have the same timezone type. '
+        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
+      );
+    }
+    return b.difference(a).inMinutes;
+  }
+
+  /// Computes the difference in whole seconds between [a] and [b].
+  ///
+  /// Throws an [ArgumentError] if the input [DateTime] instances have mismatching
+  /// timezone types (one UTC, one local).
+  ///
+  /// Example:
+  /// ```dart
+  /// final first = DateTime(2026, 8, 3, 10, 0, 0);
+  /// final second = DateTime(2026, 8, 3, 10, 0, 30);
+  /// final diff = SyncDateTime.differenceInSeconds(first, second); // 30
+  /// ```
+  static int differenceInSeconds(DateTime a, DateTime b) {
+    if (a.isUtc != b.isUtc) {
+      throw ArgumentError(
+        'Both DateTime instances must have the same timezone type. '
+        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
+      );
+    }
+    return b.difference(a).inSeconds;
+  }
+
+  /// Computes the difference in whole milliseconds between [a] and [b].
+  ///
+  /// Throws an [ArgumentError] if the input [DateTime] instances have mismatching
+  /// timezone types (one UTC, one local).
+  ///
+  /// Example:
+  /// ```dart
+  /// final first = DateTime(2026, 8, 3, 10, 0, 0, 0);
+  /// final second = DateTime(2026, 8, 3, 10, 0, 0, 500);
+  /// final diff = SyncDateTime.differenceInMilliseconds(first, second); // 500
+  /// ```
+  static int differenceInMilliseconds(DateTime a, DateTime b) {
+    if (a.isUtc != b.isUtc) {
+      throw ArgumentError(
+        'Both DateTime instances must have the same timezone type. '
+        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
+      );
+    }
+    return b.difference(a).inMilliseconds;
+  }
+
+  /// Standardizes a raw server timestamp string into a normalized UTC ISO 8601 string.
+  ///
+  /// If the input string lacks a timezone designator, it is assumed to represent UTC.
+  /// All timezone offsets (e.g. +02:00 or -05:00) are resolved to UTC, and the
+  /// resulting string is formatted in the standard UTC format ending with 'Z'.
+  ///
+  /// This is useful for storing uniform, lexicographically sortable UTC timestamps
+  /// in local databases or offline caches.
+  ///
+  /// Example:
+  /// ```dart
+  /// // With timezone designator:
+  /// final ts1 = SyncDateTime.normalizeServerTimestamp('2026-08-02T12:00:00+02:00');
+  /// // '2026-08-02T10:00:00.000Z'
+  ///
+  /// // Without timezone designator (assumed UTC):
+  /// final ts2 = SyncDateTime.normalizeServerTimestamp('2026-08-02T12:00:00');
+  /// // '2026-08-02T12:00:00.000Z'
+  /// ```
+  ///
+  /// Throws [FormatException] if the input [timestamp] is not a valid ISO 8601 date-time.
+  static String normalizeServerTimestamp(String timestamp) {
+    final trimmed = timestamp.trim();
+    final hasTimezone = _timezoneRegex.hasMatch(trimmed);
+    final normalized = hasTimezone ? trimmed : '${trimmed}Z';
+    final parsed = DateTime.parse(normalized);
+    return parsed.toUtc().toIso8601String();
+  }
 }

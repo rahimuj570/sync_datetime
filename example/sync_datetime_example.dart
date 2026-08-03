@@ -1,40 +1,65 @@
 import 'package:sync_datetime/sync_datetime.dart';
 
 void main() {
-  // 1. Convert local time to UTC
+  print('=== 1. Core Synchronization APIs ===');
   final localNow = DateTime.now();
   final utcNow = SyncDateTime.toUtc(localNow);
-  print('Local Time:       $localNow');
-  print('UTC Time:         $utcNow');
+  print('Local Time:                 $localNow');
+  print('UTC Time:                   $utcNow');
 
-  // 2. Convert UTC to local time
   final localBack = SyncDateTime.fromUtc(utcNow);
-  print('Local Time (back): $localBack');
+  print('Local Time (converted):     $localBack');
 
-  // 3. Serialize local time to server ISO 8601 UTC string
   final serverString = SyncDateTime.toServer(localNow);
-  print('Server Payload:   $serverString');
+  print('Server Payload string:      $serverString');
 
-  // 4. Parse server ISO 8601 string back to local time
-  // Note: Works correctly even if the timezone suffix (e.g. 'Z') is omitted.
   final parsedLocal = SyncDateTime.fromServer('2026-08-02T12:00:00');
-  print('Parsed Local:     $parsedLocal');
+  print('Parsed Local (assumed UTC): $parsedLocal');
 
-  // 5. Parse separate server date and time strings
-  final parsedParts = SyncDateTime.fromServerParts(
-    date: '2026-08-02',
-    time: '08:49:50.551Z',
-  );
-  print('Parsed Parts:     $parsedParts');
-
-  // 6. Combine Date and Time components
-  final dateOnly = DateTime(2026, 8, 2); // Local date
-  final timeOnly = DateTime(2020, 1, 1, 14, 30, 0); // Local time
+  final dateOnly = DateTime(2026, 8, 3);
+  final timeOnly = DateTime(2020, 1, 1, 14, 30, 0);
   final combined = SyncDateTime.combine(dateOnly, timeOnly);
-  print('Combined Local:   $combined');
+  print('Combined Local:             $combined');
 
-  // 7. Serialize DateTime to separate UTC date and time strings
-  final parts = SyncDateTime.toServerParts(localNow);
-  print('Serialized Date:  ${parts.date}');
-  print('Serialized Time:  ${parts.time}');
+  print('\n=== 2. New Core Utilities ===');
+  final today = SyncDateTime.today();
+  final todayUtc = SyncDateTime.todayUtc();
+  print('Today Local:                $today');
+  print('Today UTC:                  $todayUtc');
+
+  final start = SyncDateTime.startOfDay(localNow);
+  final end = SyncDateTime.endOfDay(localNow);
+  print('Start of Day:               $start');
+  print('End of Day:                 $end');
+
+  final dateStr = SyncDateTime.stripDate(localNow);
+  final timeStr = SyncDateTime.stripTime(localNow);
+  print('Date components string:     $dateStr');
+  print('Time components string:     $timeStr');
+
+  final updated = SyncDateTime.copyWith(localNow, year: 2030, month: 12);
+  print('CopyWith 2030-12:           $updated');
+
+  print('\n=== 3. Comparison Utilities ===');
+  final tomorrow = localNow.add(const Duration(days: 1));
+  print(
+    'Is Same Day tomorrow?       ${SyncDateTime.isSameDay(localNow, tomorrow)}',
+  );
+  print(
+    'Is Same Month tomorrow?     ${SyncDateTime.isSameMonth(localNow, tomorrow)}',
+  );
+  print('Days in Month:              ${SyncDateTime.daysInMonth(localNow)}');
+  print('Is Leap Year (2024)?        ${SyncDateTime.isLeapYear(2024)}');
+
+  print('\n=== 4. Difference Helpers ===');
+  final pastDate = DateTime(2024, 8, 3);
+  final diffYears = SyncDateTime.differenceInYears(pastDate, today);
+  final diffDays = SyncDateTime.differenceInDays(pastDate, today);
+  print('Years between $pastDate and today: $diffYears');
+  print('Days between $pastDate and today:  $diffDays');
+
+  print('\n=== 5. Server Sync Helpers ===');
+  final rawTimestamp = '2026-08-02T12:00:00.000+02:00';
+  final normalized = SyncDateTime.normalizeServerTimestamp(rawTimestamp);
+  print('Normalized $rawTimestamp -> $normalized');
 }
