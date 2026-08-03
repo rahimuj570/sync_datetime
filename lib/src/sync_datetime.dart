@@ -8,7 +8,7 @@ import 'package:sync_datetime/src/models/server_datetime_parts_model.dart';
 /// combination of date and time components.
 abstract final class SyncDateTime {
   static final RegExp _timezoneRegex = RegExp(
-    r'(?:[zZ]|[+-]\d{2}(?::?\d{2})?)$',
+    r'([zZ]|[+-]\d{2}(?::?\d{2}(?::?\d{2})?)?)$',
   );
 
   /// Converts any [DateTime] to a UTC [DateTime].
@@ -93,8 +93,19 @@ abstract final class SyncDateTime {
   /// Throws [FormatException] if the input [serverUtc] is not a valid ISO 8601
   /// date-time.
   static DateTime fromServer(String serverUtc) {
-    final hasTimezone = _timezoneRegex.hasMatch(serverUtc);
-    final normalized = hasTimezone ? serverUtc.trim() : '${serverUtc.trim()}Z';
+    final trimmed = serverUtc.trim();
+    final isPureDate =
+        !trimmed.contains(':') &&
+        !trimmed.contains('T') &&
+        !trimmed.contains(' ');
+    final hasTimezone = !isPureDate && _timezoneRegex.hasMatch(trimmed);
+
+    String normalized;
+    if (hasTimezone) {
+      normalized = trimmed;
+    } else {
+      normalized = isPureDate ? '${trimmed}T00:00:00Z' : '${trimmed}Z';
+    }
     return DateTime.parse(normalized).toLocal();
   }
 
@@ -665,8 +676,18 @@ abstract final class SyncDateTime {
   /// Throws [FormatException] if the input [timestamp] is not a valid ISO 8601 date-time.
   static String normalizeServerTimestamp(String timestamp) {
     final trimmed = timestamp.trim();
-    final hasTimezone = _timezoneRegex.hasMatch(trimmed);
-    final normalized = hasTimezone ? trimmed : '${trimmed}Z';
+    final isPureDate =
+        !trimmed.contains(':') &&
+        !trimmed.contains('T') &&
+        !trimmed.contains(' ');
+    final hasTimezone = !isPureDate && _timezoneRegex.hasMatch(trimmed);
+
+    String normalized;
+    if (hasTimezone) {
+      normalized = trimmed;
+    } else {
+      normalized = isPureDate ? '${trimmed}T00:00:00Z' : '${trimmed}Z';
+    }
     final parsed = DateTime.parse(normalized);
     return parsed.toUtc().toIso8601String();
   }

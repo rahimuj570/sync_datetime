@@ -34,7 +34,7 @@ Add `sync_datetime` to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  sync_datetime: ^0.1.5
+  sync_datetime: ^0.1.6
 ```
 
 Or run the pub command:

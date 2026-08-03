@@ -73,6 +73,7 @@ void main() {
       test(
         'parses standard ISO 8601 UTC string ending in Z and returns local time',
         () {
+          // 2026-08-03T07:11:15+00:00
           final serverUtc = '2026-08-02T12:00:00.000Z';
           final result = SyncDateTime.fromServer(serverUtc);
 
@@ -95,12 +96,15 @@ void main() {
       test(
         'parses ISO 8601 string with specific offset, assumes UTC, and shifts to local',
         () {
-          final serverUtc = '2026-08-02T12:00:00.000+02:00';
-          final result = SyncDateTime.fromServer(serverUtc);
+          final serverUtcExtended = '2026-08-02T12:00:00.000+02:00';
+          final resultExtended = SyncDateTime.fromServer(serverUtcExtended);
+          expect(resultExtended.isUtc, isFalse);
+          expect(resultExtended, DateTime.utc(2026, 8, 2, 10, 0, 0).toLocal());
 
-          expect(result.isUtc, isFalse);
-          // +02:00 represents a timezone 2 hours ahead of UTC, so the UTC time is 10:00:00
-          expect(result, DateTime.utc(2026, 8, 2, 10, 0, 0).toLocal());
+          final serverUtcBasic = '2026-08-02T12:00:00.000+0200';
+          final resultBasic = SyncDateTime.fromServer(serverUtcBasic);
+          expect(resultBasic.isUtc, isFalse);
+          expect(resultBasic, DateTime.utc(2026, 8, 2, 10, 0, 0).toLocal());
         },
       );
 
@@ -122,6 +126,17 @@ void main() {
 
         expect(result, DateTime.utc(2026, 8, 2, 17, 0, 0).toLocal());
       });
+
+      test(
+        'parses pure date-only string as UTC start of day and returns local representation',
+        () {
+          final serverUtc = '2026-08-02';
+          final result = SyncDateTime.fromServer(serverUtc);
+
+          expect(result.isUtc, isFalse);
+          expect(result, DateTime.utc(2026, 8, 2, 0, 0, 0).toLocal());
+        },
+      );
     });
 
     group('fromServerParts', () {
@@ -544,6 +559,11 @@ void main() {
           expect(result, '2026-08-02T10:00:00.000Z');
         },
       );
+
+      test('normalizes pure date-only string to UTC start of day format', () {
+        final result = SyncDateTime.normalizeServerTimestamp('2026-08-02');
+        expect(result, '2026-08-02T00:00:00.000Z');
+      });
 
       test('throws FormatException for invalid timestamps', () {
         expect(

@@ -1,3 +1,9 @@
+## 0.1.6
+
+- Improve `fromServer` parser timezone handling logic by updating the timezone regex matching pattern.
+- Support all valid ISO 8601 offset strings including basic formats without colons (e.g. `+0000`) and lowercase timezone indicators.
+- Expand test coverage validating various offset string patterns.
+
 ## 0.1.5
 
 - Add Core Utilities: `today()`, `todayUtc()`, `nowUtc()`, `startOfDay()`, `endOfDay()`, `stripDate()`, `stripTime()`, and `copyWith()`.
