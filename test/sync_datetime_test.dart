@@ -572,5 +572,132 @@ void main() {
         );
       });
     });
+
+    group('Calendar Arithmetic', () {
+      test('addDays adds positive/negative days and preserves timezone & time', () {
+        final local = DateTime(2026, 8, 3, 10, 30);
+        final utc = DateTime.utc(2026, 8, 3, 10, 30);
+
+        final localPlus5 = SyncDateTime.addDays(local, 5);
+        expect(localPlus5, DateTime(2026, 8, 8, 10, 30));
+        expect(localPlus5.isUtc, isFalse);
+
+        final utcMinus3 = SyncDateTime.addDays(utc, -3);
+        expect(utcMinus3, DateTime.utc(2026, 7, 31, 10, 30));
+        expect(utcMinus3.isUtc, isTrue);
+
+        // Check immutability
+        expect(local, DateTime(2026, 8, 3, 10, 30));
+        expect(utc, DateTime.utc(2026, 8, 3, 10, 30));
+      });
+
+      test('previousDay and nextDay work correctly', () {
+        final local = DateTime(2026, 8, 3, 12);
+        expect(SyncDateTime.previousDay(local), DateTime(2026, 8, 2, 12));
+        expect(SyncDateTime.nextDay(local), DateTime(2026, 8, 4, 12));
+      });
+
+      test('addMonths adds and clamps months, preserves timezone & time', () {
+        // Time preservation and clamp check
+        final localJan31 = DateTime(2026, 1, 31, 15, 45, 12, 123, 456);
+        final localFeb = SyncDateTime.addMonths(localJan31, 1);
+        expect(localFeb, DateTime(2026, 2, 28, 15, 45, 12, 123, 456));
+        expect(localFeb.isUtc, isFalse);
+
+        // Leap year check
+        final utcJan31Leap = DateTime.utc(2024, 1, 31, 8);
+        final utcFebLeap = SyncDateTime.addMonths(utcJan31Leap, 1);
+        expect(utcFebLeap, DateTime.utc(2024, 2, 29, 8));
+        expect(utcFebLeap.isUtc, isTrue);
+
+        // Negative months addition
+        final localMarch31 = DateTime(2026, 3, 31);
+        final localFebBack = SyncDateTime.addMonths(localMarch31, -1);
+        expect(localFebBack, DateTime(2026, 2, 28));
+
+        // December -> January rollover
+        final localDec31 = DateTime(2025, 12, 31);
+        final localJanNext = SyncDateTime.addMonths(localDec31, 1);
+        expect(localJanNext, DateTime(2026, 1, 31));
+
+        // Large months addition
+        final localJan = DateTime(2026, 1, 15);
+        final localFarFuture = SyncDateTime.addMonths(localJan, 25); // 2 years, 1 month
+        expect(localFarFuture, DateTime(2028, 2, 15));
+      });
+
+      test('previousMonth and nextMonth work correctly', () {
+        final local = DateTime(2026, 8, 15);
+        expect(SyncDateTime.previousMonth(local), DateTime(2026, 7, 15));
+        expect(SyncDateTime.nextMonth(local), DateTime(2026, 9, 15));
+      });
+
+      test('addYears adds positive/negative years, leap years, preserves timezone & time', () {
+        final localLeap = DateTime(2024, 2, 29, 11, 22);
+        
+        final plus1 = SyncDateTime.addYears(localLeap, 1);
+        expect(plus1, DateTime(2025, 2, 28, 11, 22));
+        expect(plus1.isUtc, isFalse);
+
+        final minus4 = SyncDateTime.addYears(localLeap, -4);
+        expect(minus4, DateTime(2020, 2, 29, 11, 22)); // 2020 is a leap year
+
+        final utcLeap = DateTime.utc(2024, 2, 29, 11, 22);
+        final utcPlus1 = SyncDateTime.addYears(utcLeap, 1);
+        expect(utcPlus1, DateTime.utc(2025, 2, 28, 11, 22));
+        expect(utcPlus1.isUtc, isTrue);
+      });
+
+      test('previousYear and nextYear work correctly', () {
+        final local = DateTime(2026, 8, 15);
+        expect(SyncDateTime.previousYear(local), DateTime(2025, 8, 15));
+        expect(SyncDateTime.nextYear(local), DateTime(2027, 8, 15));
+      });
+
+      test('addHours and addMinutes work correctly and handle rollover', () {
+        final local = DateTime(2026, 8, 3, 23, 30);
+        
+        final plus2Hours = SyncDateTime.addHours(local, 2);
+        expect(plus2Hours, DateTime(2026, 8, 4, 1, 30));
+        expect(plus2Hours.isUtc, isFalse);
+
+        final minus40Minutes = SyncDateTime.addMinutes(local, -40);
+        expect(minus40Minutes, DateTime(2026, 8, 3, 22, 50));
+        expect(minus40Minutes.isUtc, isFalse);
+      });
+
+      test('min and max return correct bounds and check timezone matching', () {
+        final localA = DateTime(2026, 8, 3);
+        final localB = DateTime(2026, 8, 4);
+        final utcA = DateTime.utc(2026, 8, 3);
+
+        expect(SyncDateTime.min(localA, localB), localA);
+        expect(SyncDateTime.min(localB, localA), localA);
+        expect(SyncDateTime.max(localA, localB), localB);
+        expect(SyncDateTime.max(localB, localA), localB);
+
+        expect(() => SyncDateTime.min(localA, utcA), throwsArgumentError);
+        expect(() => SyncDateTime.max(localA, utcA), throwsArgumentError);
+      });
+
+      test('clamp clamps value within boundaries and checks timezone matching', () {
+        final localMin = DateTime(2026, 8, 1);
+        final localMax = DateTime(2026, 8, 10);
+        final localValIn = DateTime(2026, 8, 5);
+        final localValLow = DateTime(2026, 7, 28);
+        final localValHigh = DateTime(2026, 8, 15);
+
+        expect(SyncDateTime.clamp(localValIn, localMin, localMax), localValIn);
+        expect(SyncDateTime.clamp(localValLow, localMin, localMax), localMin);
+        expect(SyncDateTime.clamp(localValHigh, localMin, localMax), localMax);
+
+        // Invalid min/max bounds
+        expect(() => SyncDateTime.clamp(localValIn, localMax, localMin), throwsArgumentError);
+
+        // Mismatched timezones
+        final utcMin = DateTime.utc(2026, 8, 1);
+        expect(() => SyncDateTime.clamp(localValIn, utcMin, localMax), throwsArgumentError);
+      });
+    });
   });
 }

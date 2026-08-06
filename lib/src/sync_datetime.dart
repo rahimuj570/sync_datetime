@@ -1,5 +1,13 @@
 import 'package:sync_datetime/src/models/server_datetime_parts_model.dart';
 
+part 'helpers/conversion_helper.dart';
+part 'helpers/server_helper.dart';
+part 'helpers/calendar_helper.dart';
+part 'helpers/comparison_helper.dart';
+part 'helpers/difference_helper.dart';
+part 'helpers/manipulation_helper.dart';
+part 'helpers/arithmetic_helper.dart';
+
 /// A utility class providing predictable and zero-boilerplate DateTime
 /// synchronization methods.
 ///
@@ -7,10 +15,6 @@ import 'package:sync_datetime/src/models/server_datetime_parts_model.dart';
 /// on correct timezone conversion, robust parsing of server timestamps, and
 /// combination of date and time components.
 abstract final class SyncDateTime {
-  static final RegExp _timezoneRegex = RegExp(
-    r'([zZ]|[+-]\d{2}(?::?\d{2}(?::?\d{2})?)?)$',
-  );
-
   /// Converts any [DateTime] to a UTC [DateTime].
   ///
   /// If the input [dateTime] is already in UTC, it is returned as-is (making the
@@ -24,9 +28,8 @@ abstract final class SyncDateTime {
   /// ```
   ///
   /// Returns a new [DateTime] object with [DateTime.isUtc] set to true.
-  static DateTime toUtc(DateTime dateTime) {
-    return dateTime.isUtc ? dateTime : dateTime.toUtc();
-  }
+  static DateTime toUtc(DateTime dateTime) =>
+      _ConversionHelper.toUtc(dateTime);
 
   /// Converts a UTC [DateTime] to a local [DateTime].
   ///
@@ -43,16 +46,8 @@ abstract final class SyncDateTime {
   /// Returns a new [DateTime] object with [DateTime.isUtc] set to false.
   ///
   /// Throws [ArgumentError] if the input [utc] does not represent a UTC time.
-  static DateTime fromUtc(DateTime utc) {
-    if (!utc.isUtc) {
-      throw ArgumentError.value(
-        utc,
-        'utc',
-        'The input DateTime must be in UTC timezone (isUtc must be true).',
-      );
-    }
-    return utc.toLocal();
-  }
+  static DateTime fromUtc(DateTime utc) =>
+      _ConversionHelper.fromUtc(utc);
 
   /// Converts a [DateTime] to a UTC ISO 8601 string representation.
   ///
@@ -67,9 +62,8 @@ abstract final class SyncDateTime {
   ///
   /// Returns a string formatted like `2026-08-02T12:00:00.000Z` or
   /// `2026-08-02T12:00:00.000000Z`.
-  static String toServer(DateTime dateTime) {
-    return toUtc(dateTime).toIso8601String();
-  }
+  static String toServer(DateTime dateTime) =>
+      _ServerHelper.toServer(dateTime);
 
   /// Parses a UTC ISO 8601 string [serverUtc] from the server and converts it
   /// to local time.
@@ -92,22 +86,8 @@ abstract final class SyncDateTime {
   ///
   /// Throws [FormatException] if the input [serverUtc] is not a valid ISO 8601
   /// date-time.
-  static DateTime fromServer(String serverUtc) {
-    final trimmed = serverUtc.trim();
-    final isPureDate =
-        !trimmed.contains(':') &&
-        !trimmed.contains('T') &&
-        !trimmed.contains(' ');
-    final hasTimezone = !isPureDate && _timezoneRegex.hasMatch(trimmed);
-
-    String normalized;
-    if (hasTimezone) {
-      normalized = trimmed;
-    } else {
-      normalized = isPureDate ? '${trimmed}T00:00:00Z' : '${trimmed}Z';
-    }
-    return DateTime.parse(normalized).toLocal();
-  }
+  static DateTime fromServer(String serverUtc) =>
+      _ServerHelper.fromServer(serverUtc);
 
   /// Assumes [date] and [time] originate from the same server payload and
   /// represent a single UTC timestamp.
@@ -134,14 +114,8 @@ abstract final class SyncDateTime {
   static DateTime fromServerParts({
     required String date,
     required String time,
-  }) {
-    final trimmedDate = date.trim();
-    final trimmedTime = time.trim();
-    final separator = trimmedTime.startsWith('T') || trimmedTime.startsWith(' ')
-        ? ''
-        : 'T';
-    return fromServer('$trimmedDate$separator$trimmedTime');
-  }
+  }) =>
+      _ServerHelper.fromServerParts(date: date, time: time);
 
   /// Combines the date components of [date] with the time components of [time].
   ///
@@ -163,40 +137,8 @@ abstract final class SyncDateTime {
   ///
   /// Throws [ArgumentError] if the timezone types (UTC vs local) of the inputs
   /// mismatch.
-  static DateTime combine(DateTime date, DateTime time) {
-    if (date.isUtc != time.isUtc) {
-      throw ArgumentError.value(
-        time,
-        'time',
-        'Both date and time must have the same timezone type (both UTC or both local). '
-            'date.isUtc is ${date.isUtc}, but time.isUtc is ${time.isUtc}.',
-      );
-    }
-
-    if (date.isUtc) {
-      return DateTime.utc(
-        date.year,
-        date.month,
-        date.day,
-        time.hour,
-        time.minute,
-        time.second,
-        time.millisecond,
-        time.microsecond,
-      );
-    } else {
-      return DateTime(
-        date.year,
-        date.month,
-        date.day,
-        time.hour,
-        time.minute,
-        time.second,
-        time.millisecond,
-        time.microsecond,
-      );
-    }
-  }
+  static DateTime combine(DateTime date, DateTime time) =>
+      _ManipulationHelper.combine(date, time);
 
   /// Converts a [DateTime] into separate UTC date and time strings suitable
   /// for backend APIs that expect individual fields.
@@ -214,15 +156,8 @@ abstract final class SyncDateTime {
   /// ```
   ///
   /// Returns a [ServerDateTimeParts].
-  static ServerDateTimeParts toServerParts(DateTime dateTime) {
-    final utc = toUtc(dateTime);
-
-    final iso = utc.toIso8601String();
-
-    final split = iso.split('T');
-
-    return ServerDateTimeParts(date: split.first, time: split.last);
-  }
+  static ServerDateTimeParts toServerParts(DateTime dateTime) =>
+      _ServerHelper.toServerParts(dateTime);
 
   /// Returns the start of the current local calendar day.
   ///
@@ -234,10 +169,8 @@ abstract final class SyncDateTime {
   /// ```dart
   /// final today = SyncDateTime.today();
   /// ```
-  static DateTime today() {
-    final now = DateTime.now();
-    return DateTime(now.year, now.month, now.day);
-  }
+  static DateTime today() =>
+      _CalendarHelper.today();
 
   /// Returns the start of the current UTC calendar day.
   ///
@@ -248,10 +181,8 @@ abstract final class SyncDateTime {
   /// ```dart
   /// final todayUtc = SyncDateTime.todayUtc();
   /// ```
-  static DateTime todayUtc() {
-    final now = DateTime.now().toUtc();
-    return DateTime.utc(now.year, now.month, now.day);
-  }
+  static DateTime todayUtc() =>
+      _CalendarHelper.todayUtc();
 
   /// Returns the current UTC date and time.
   ///
@@ -264,9 +195,8 @@ abstract final class SyncDateTime {
   /// final now = SyncDateTime.nowUtc();
   /// print(now.isUtc); // true
   /// ```
-  static DateTime nowUtc() {
-    return DateTime.now().toUtc();
-  }
+  static DateTime nowUtc() =>
+      _CalendarHelper.nowUtc();
 
   /// Returns a new [DateTime] set to the start of the day (00:00:00.000000)
   /// for the given [dateTime], preserving its timezone type (UTC or Local).
@@ -279,13 +209,8 @@ abstract final class SyncDateTime {
   /// final utc = DateTime.utc(2026, 8, 2, 11, 50, 0);
   /// final startUtc = SyncDateTime.startOfDay(utc); // 2026-08-02 00:00:00.000Z
   /// ```
-  static DateTime startOfDay(DateTime dateTime) {
-    if (dateTime.isUtc) {
-      return DateTime.utc(dateTime.year, dateTime.month, dateTime.day);
-    } else {
-      return DateTime(dateTime.year, dateTime.month, dateTime.day);
-    }
-  }
+  static DateTime startOfDay(DateTime dateTime) =>
+      _ManipulationHelper.startOfDay(dateTime);
 
   /// Returns a new [DateTime] set to the end of the day (23:59:59.999999)
   /// for the given [dateTime], preserving its timezone type (UTC or Local).
@@ -298,31 +223,8 @@ abstract final class SyncDateTime {
   /// final utc = DateTime.utc(2026, 8, 2, 11, 50, 0);
   /// final endUtc = SyncDateTime.endOfDay(utc); // 2026-08-02 23:59:59.999999Z
   /// ```
-  static DateTime endOfDay(DateTime dateTime) {
-    if (dateTime.isUtc) {
-      return DateTime.utc(
-        dateTime.year,
-        dateTime.month,
-        dateTime.day,
-        23,
-        59,
-        59,
-        999,
-        999,
-      );
-    } else {
-      return DateTime(
-        dateTime.year,
-        dateTime.month,
-        dateTime.day,
-        23,
-        59,
-        59,
-        999,
-        999,
-      );
-    }
-  }
+  static DateTime endOfDay(DateTime dateTime) =>
+      _ManipulationHelper.endOfDay(dateTime);
 
   /// Extracts the date component from [dateTime] and returns it as a string
   /// formatted as `yyyy-MM-dd` (e.g. '2002-02-06').
@@ -332,10 +234,8 @@ abstract final class SyncDateTime {
   /// final date = DateTime(2026, 8, 3, 11, 50, 0);
   /// final dateStr = SyncDateTime.stripDate(date); // '2026-08-03'
   /// ```
-  static String stripDate(DateTime dateTime) {
-    final iso = dateTime.toIso8601String();
-    return iso.split('T').first;
-  }
+  static String stripDate(DateTime dateTime) =>
+      _ManipulationHelper.stripDate(dateTime);
 
   /// Extracts the time component from [dateTime] and returns it as a string
   /// (e.g. '17:15:30.000' or '17:15:30.000Z' if UTC), preserving timezone compatibility.
@@ -348,10 +248,8 @@ abstract final class SyncDateTime {
   /// final utc = DateTime.utc(2026, 8, 3, 17, 15, 30);
   /// final timeUtcStr = SyncDateTime.stripTime(utc); // '17:15:30.000Z'
   /// ```
-  static String stripTime(DateTime dateTime) {
-    final iso = dateTime.toIso8601String();
-    return iso.split('T').last;
-  }
+  static String stripTime(DateTime dateTime) =>
+      _ManipulationHelper.stripTime(dateTime);
 
   /// Returns a copy of [dateTime] with the specified fields replaced with new values,
   /// preserving the timezone type (UTC or Local) of the input.
@@ -372,31 +270,18 @@ abstract final class SyncDateTime {
     int? second,
     int? millisecond,
     int? microsecond,
-  }) {
-    if (dateTime.isUtc) {
-      return DateTime.utc(
-        year ?? dateTime.year,
-        month ?? dateTime.month,
-        day ?? dateTime.day,
-        hour ?? dateTime.hour,
-        minute ?? dateTime.minute,
-        second ?? dateTime.second,
-        millisecond ?? dateTime.millisecond,
-        microsecond ?? dateTime.microsecond,
+  }) =>
+      _ManipulationHelper.copyWith(
+        dateTime,
+        year: year,
+        month: month,
+        day: day,
+        hour: hour,
+        minute: minute,
+        second: second,
+        millisecond: millisecond,
+        microsecond: microsecond,
       );
-    } else {
-      return DateTime(
-        year ?? dateTime.year,
-        month ?? dateTime.month,
-        day ?? dateTime.day,
-        hour ?? dateTime.hour,
-        minute ?? dateTime.minute,
-        second ?? dateTime.second,
-        millisecond ?? dateTime.millisecond,
-        microsecond ?? dateTime.microsecond,
-      );
-    }
-  }
 
   /// Checks if [a] and [b] represent the same calendar day.
   ///
@@ -409,15 +294,8 @@ abstract final class SyncDateTime {
   /// final second = DateTime(2026, 8, 3, 23, 59);
   /// final result = SyncDateTime.isSameDay(first, second); // true
   /// ```
-  static bool isSameDay(DateTime a, DateTime b) {
-    if (a.isUtc != b.isUtc) {
-      throw ArgumentError(
-        'Both DateTime instances must have the same timezone type. '
-        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
-      );
-    }
-    return a.year == b.year && a.month == b.month && a.day == b.day;
-  }
+  static bool isSameDay(DateTime a, DateTime b) =>
+      _ComparisonHelper.isSameDay(a, b);
 
   /// Checks if [a] and [b] represent the same month and year.
   ///
@@ -430,15 +308,8 @@ abstract final class SyncDateTime {
   /// final second = DateTime(2026, 8, 20);
   /// final result = SyncDateTime.isSameMonth(first, second); // true
   /// ```
-  static bool isSameMonth(DateTime a, DateTime b) {
-    if (a.isUtc != b.isUtc) {
-      throw ArgumentError(
-        'Both DateTime instances must have the same timezone type. '
-        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
-      );
-    }
-    return a.year == b.year && a.month == b.month;
-  }
+  static bool isSameMonth(DateTime a, DateTime b) =>
+      _ComparisonHelper.isSameMonth(a, b);
 
   /// Checks if [a] and [b] represent the same year.
   ///
@@ -451,15 +322,8 @@ abstract final class SyncDateTime {
   /// final second = DateTime(2026, 12, 31);
   /// final result = SyncDateTime.isSameYear(first, second); // true
   /// ```
-  static bool isSameYear(DateTime a, DateTime b) {
-    if (a.isUtc != b.isUtc) {
-      throw ArgumentError(
-        'Both DateTime instances must have the same timezone type. '
-        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
-      );
-    }
-    return a.year == b.year;
-  }
+  static bool isSameYear(DateTime a, DateTime b) =>
+      _ComparisonHelper.isSameYear(a, b);
 
   /// Computes the difference in calendar days between [a] and [b].
   ///
@@ -475,17 +339,8 @@ abstract final class SyncDateTime {
   /// final second = DateTime(2026, 8, 4, 0, 1);
   /// final diff = SyncDateTime.daysBetween(first, second); // 1
   /// ```
-  static int daysBetween(DateTime a, DateTime b) {
-    if (a.isUtc != b.isUtc) {
-      throw ArgumentError(
-        'Both DateTime instances must have the same timezone type. '
-        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
-      );
-    }
-    final aUtc = DateTime.utc(a.year, a.month, a.day);
-    final bUtc = DateTime.utc(b.year, b.month, b.day);
-    return bUtc.difference(aUtc).inDays;
-  }
+  static int daysBetween(DateTime a, DateTime b) =>
+      _DifferenceHelper.daysBetween(a, b);
 
   /// Returns the number of days in the month of the given [dateTime].
   ///
@@ -494,15 +349,8 @@ abstract final class SyncDateTime {
   /// final date = DateTime(2026, 2, 1);
   /// final days = SyncDateTime.daysInMonth(date); // 28
   /// ```
-  static int daysInMonth(DateTime dateTime) {
-    final year = dateTime.year;
-    final month = dateTime.month;
-    if (month == 2) {
-      return isLeapYear(year) ? 29 : 28;
-    }
-    const days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    return days[month - 1];
-  }
+  static int daysInMonth(DateTime dateTime) =>
+      _CalendarHelper.daysInMonth(dateTime);
 
   /// Checks if the given [year] is a leap year.
   ///
@@ -511,9 +359,8 @@ abstract final class SyncDateTime {
   /// final leap = SyncDateTime.isLeapYear(2024); // true
   /// final common = SyncDateTime.isLeapYear(2026); // false
   /// ```
-  static bool isLeapYear(int year) {
-    return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
-  }
+  static bool isLeapYear(int year) =>
+      _CalendarHelper.isLeapYear(year);
 
   /// Computes the number of full years between [a] and [b].
   ///
@@ -529,25 +376,8 @@ abstract final class SyncDateTime {
   /// final second = DateTime(2026, 8, 2);
   /// final diff = SyncDateTime.differenceInYears(first, second); // 1 (not yet 2 full years)
   /// ```
-  static int differenceInYears(DateTime a, DateTime b) {
-    if (a.isUtc != b.isUtc) {
-      throw ArgumentError(
-        'Both DateTime instances must have the same timezone type. '
-        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
-      );
-    }
-    int years = b.year - a.year;
-    if (years > 0) {
-      if (b.month < a.month || (b.month == a.month && b.day < a.day)) {
-        years--;
-      }
-    } else if (years < 0) {
-      if (b.month > a.month || (b.month == a.month && b.day > a.day)) {
-        years++;
-      }
-    }
-    return years;
-  }
+  static int differenceInYears(DateTime a, DateTime b) =>
+      _DifferenceHelper.differenceInYears(a, b);
 
   /// Computes the difference in calendar days between [a] and [b].
   ///
@@ -562,9 +392,8 @@ abstract final class SyncDateTime {
   /// final second = DateTime(2026, 8, 4, 0, 1);
   /// final diff = SyncDateTime.differenceInDays(first, second); // 1
   /// ```
-  static int differenceInDays(DateTime a, DateTime b) {
-    return daysBetween(a, b);
-  }
+  static int differenceInDays(DateTime a, DateTime b) =>
+      _DifferenceHelper.differenceInDays(a, b);
 
   /// Computes the difference in whole hours between [a] and [b].
   ///
@@ -580,15 +409,8 @@ abstract final class SyncDateTime {
   /// final second = DateTime(2026, 8, 3, 12, 30);
   /// final diff = SyncDateTime.differenceInHours(first, second); // 2
   /// ```
-  static int differenceInHours(DateTime a, DateTime b) {
-    if (a.isUtc != b.isUtc) {
-      throw ArgumentError(
-        'Both DateTime instances must have the same timezone type. '
-        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
-      );
-    }
-    return b.difference(a).inHours;
-  }
+  static int differenceInHours(DateTime a, DateTime b) =>
+      _DifferenceHelper.differenceInHours(a, b);
 
   /// Computes the difference in whole minutes between [a] and [b].
   ///
@@ -601,15 +423,8 @@ abstract final class SyncDateTime {
   /// final second = DateTime(2026, 8, 3, 10, 45);
   /// final diff = SyncDateTime.differenceInMinutes(first, second); // 45
   /// ```
-  static int differenceInMinutes(DateTime a, DateTime b) {
-    if (a.isUtc != b.isUtc) {
-      throw ArgumentError(
-        'Both DateTime instances must have the same timezone type. '
-        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
-      );
-    }
-    return b.difference(a).inMinutes;
-  }
+  static int differenceInMinutes(DateTime a, DateTime b) =>
+      _DifferenceHelper.differenceInMinutes(a, b);
 
   /// Computes the difference in whole seconds between [a] and [b].
   ///
@@ -622,15 +437,8 @@ abstract final class SyncDateTime {
   /// final second = DateTime(2026, 8, 3, 10, 0, 30);
   /// final diff = SyncDateTime.differenceInSeconds(first, second); // 30
   /// ```
-  static int differenceInSeconds(DateTime a, DateTime b) {
-    if (a.isUtc != b.isUtc) {
-      throw ArgumentError(
-        'Both DateTime instances must have the same timezone type. '
-        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
-      );
-    }
-    return b.difference(a).inSeconds;
-  }
+  static int differenceInSeconds(DateTime a, DateTime b) =>
+      _DifferenceHelper.differenceInSeconds(a, b);
 
   /// Computes the difference in whole milliseconds between [a] and [b].
   ///
@@ -643,15 +451,8 @@ abstract final class SyncDateTime {
   /// final second = DateTime(2026, 8, 3, 10, 0, 0, 500);
   /// final diff = SyncDateTime.differenceInMilliseconds(first, second); // 500
   /// ```
-  static int differenceInMilliseconds(DateTime a, DateTime b) {
-    if (a.isUtc != b.isUtc) {
-      throw ArgumentError(
-        'Both DateTime instances must have the same timezone type. '
-        'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
-      );
-    }
-    return b.difference(a).inMilliseconds;
-  }
+  static int differenceInMilliseconds(DateTime a, DateTime b) =>
+      _DifferenceHelper.differenceInMilliseconds(a, b);
 
   /// Standardizes a raw server timestamp string into a normalized UTC ISO 8601 string.
   ///
@@ -674,21 +475,215 @@ abstract final class SyncDateTime {
   /// ```
   ///
   /// Throws [FormatException] if the input [timestamp] is not a valid ISO 8601 date-time.
-  static String normalizeServerTimestamp(String timestamp) {
-    final trimmed = timestamp.trim();
-    final isPureDate =
-        !trimmed.contains(':') &&
-        !trimmed.contains('T') &&
-        !trimmed.contains(' ');
-    final hasTimezone = !isPureDate && _timezoneRegex.hasMatch(trimmed);
+  static String normalizeServerTimestamp(String timestamp) =>
+      _ServerHelper.normalizeServerTimestamp(timestamp);
 
-    String normalized;
-    if (hasTimezone) {
-      normalized = trimmed;
-    } else {
-      normalized = isPureDate ? '${trimmed}T00:00:00Z' : '${trimmed}Z';
-    }
-    final parsed = DateTime.parse(normalized);
-    return parsed.toUtc().toIso8601String();
+  /// Returns a new [DateTime] with the specified number of [days] added.
+  ///
+  /// The operation is timezone-safe and preserves whether the input [dateTime]
+  /// is UTC or local. Positive values add days, while negative values subtract.
+  ///
+  /// Example:
+  /// ```dart
+  /// final today = DateTime.now();
+  /// final fiveDaysLater = SyncDateTime.addDays(today, 5);
+  /// final threeDaysAgo = SyncDateTime.addDays(today, -3);
+  /// ```
+  static DateTime addDays(DateTime dateTime, int days) =>
+      _ArithmeticHelper.addDays(dateTime, days);
+
+  /// Returns a new [DateTime] set to the previous day (24 hours earlier calendar-wise).
+  ///
+  /// The operation preserves whether the input [dateTime] is UTC or local.
+  ///
+  /// Example:
+  /// ```dart
+  /// final yesterday = SyncDateTime.previousDay(DateTime.now());
+  /// ```
+  static DateTime previousDay(DateTime dateTime) =>
+      _ArithmeticHelper.previousDay(dateTime);
+
+  /// Returns a new [DateTime] set to the next day (24 hours later calendar-wise).
+  ///
+  /// The operation preserves whether the input [dateTime] is UTC or local.
+  ///
+  /// Example:
+  /// ```dart
+  /// final tomorrow = SyncDateTime.nextDay(DateTime.now());
+  /// ```
+  static DateTime nextDay(DateTime dateTime) =>
+      _ArithmeticHelper.nextDay(dateTime);
+
+  /// Returns a new [DateTime] with the specified number of [months] added.
+  ///
+  /// Time components (hour, minute, second, millisecond, microsecond) and timezone
+  /// (UTC/local) are preserved.
+  ///
+  /// If the target month has fewer days than the input day (e.g. adding 1 month
+  /// to January 31st in a non-leap year target), the day is clamped to the last
+  /// day of that month (February 28th).
+  ///
+  /// Example:
+  /// ```dart
+  /// final jan31 = DateTime(2026, 1, 31);
+  /// final feb28 = SyncDateTime.addMonths(jan31, 1); // 2026-02-28
+  ///
+  /// final leapJan31 = DateTime(2024, 1, 31);
+  /// final feb29 = SyncDateTime.addMonths(leapJan31, 1); // 2024-02-29
+  /// ```
+  static DateTime addMonths(DateTime dateTime, int months) =>
+      _ArithmeticHelper.addMonths(dateTime, months);
+
+  /// Returns a new [DateTime] set to the previous month, clamping day if needed.
+  ///
+  /// The operation preserves time components and whether the input [dateTime] is UTC or local.
+  ///
+  /// Example:
+  /// ```dart
+  /// final lastMonth = SyncDateTime.previousMonth(DateTime.now());
+  /// ```
+  static DateTime previousMonth(DateTime dateTime) =>
+      _ArithmeticHelper.previousMonth(dateTime);
+
+  /// Returns a new [DateTime] set to the next month, clamping day if needed.
+  ///
+  /// The operation preserves time components and whether the input [dateTime] is UTC or local.
+  ///
+  /// Example:
+  /// ```dart
+  /// final nextMonth = SyncDateTime.nextMonth(DateTime.now());
+  /// ```
+  static DateTime nextMonth(DateTime dateTime) =>
+      _ArithmeticHelper.nextMonth(dateTime);
+
+  /// Returns a new [DateTime] with the specified number of [years] added.
+  ///
+  /// Correctly handles leap years. For example, adding 1 year to February 29th, 2024
+  /// yields February 28th, 2025.
+  ///
+  /// Time components and timezone (UTC/local) are preserved.
+  ///
+  /// Example:
+  /// ```dart
+  /// final leapDay = DateTime(2024, 2, 29);
+  /// final nonLeapDay = SyncDateTime.addYears(leapDay, 1); // 2025-02-28
+  /// ```
+  static DateTime addYears(DateTime dateTime, int years) =>
+      _ArithmeticHelper.addYears(dateTime, years);
+
+  /// Returns a new [DateTime] set to the previous year.
+  ///
+  /// The operation preserves time components and whether the input [dateTime] is UTC or local.
+  ///
+  /// Example:
+  /// ```dart
+  /// final lastYear = SyncDateTime.previousYear(DateTime.now());
+  /// ```
+  static DateTime previousYear(DateTime dateTime) =>
+      _ArithmeticHelper.previousYear(dateTime);
+
+  /// Returns a new [DateTime] set to the next year.
+  ///
+  /// The operation preserves time components and whether the input [dateTime] is UTC or local.
+  ///
+  /// Example:
+  /// ```dart
+  /// final nextYear = SyncDateTime.nextYear(DateTime.now());
+  /// ```
+  static DateTime nextYear(DateTime dateTime) =>
+      _ArithmeticHelper.nextYear(dateTime);
+
+  /// Returns a new [DateTime] with the specified number of [hours] added.
+  ///
+  /// The operation is timezone-safe and preserves whether the input [dateTime]
+  /// is UTC or local. Positive values add hours, while negative values subtract.
+  ///
+  /// Example:
+  /// ```dart
+  /// final now = DateTime.now();
+  /// final threeHoursLater = SyncDateTime.addHours(now, 3);
+  /// ```
+  static DateTime addHours(DateTime dateTime, int hours) =>
+      _ArithmeticHelper.addHours(dateTime, hours);
+
+  /// Returns a new [DateTime] with the specified number of [minutes] added.
+  ///
+  /// The operation is timezone-safe and preserves whether the input [dateTime]
+  /// is UTC or local. Positive values add minutes, while negative values subtract.
+  ///
+  /// Example:
+  /// ```dart
+  /// final now = DateTime.now();
+  /// final thirtyMinutesLater = SyncDateTime.addMinutes(now, 30);
+  /// ```
+  static DateTime addMinutes(DateTime dateTime, int minutes) =>
+      _ArithmeticHelper.addMinutes(dateTime, minutes);
+
+  /// Returns the earlier of the two [DateTime] instances [a] and [b].
+  ///
+  /// Throws an [ArgumentError] if the timezone types (UTC vs local) mismatch.
+  ///
+  /// Example:
+  /// ```dart
+  /// final first = DateTime(2026, 8, 3);
+  /// final second = DateTime(2026, 8, 4);
+  /// final earlier = SyncDateTime.min(first, second); // first
+  /// ```
+  static DateTime min(DateTime a, DateTime b) =>
+      _ArithmeticHelper.min(a, b);
+
+  /// Returns the later of the two [DateTime] instances [a] and [b].
+  ///
+  /// Throws an [ArgumentError] if the timezone types (UTC vs local) mismatch.
+  ///
+  /// Example:
+  /// ```dart
+  /// final first = DateTime(2026, 8, 3);
+  /// final second = DateTime(2026, 8, 4);
+  /// final later = SyncDateTime.max(first, second); // second
+  /// ```
+  static DateTime max(DateTime a, DateTime b) =>
+      _ArithmeticHelper.max(a, b);
+
+  /// Clamps the [value] to be within the range [min] to [max] inclusive.
+  ///
+  /// Throws an [ArgumentError] if the timezone types of [value], [min], or [max] mismatch.
+  /// Throws an [ArgumentError] if [min] is greater than [max].
+  ///
+  /// Example:
+  /// ```dart
+  /// final min = DateTime(2026, 8, 1);
+  /// final max = DateTime(2026, 8, 10);
+  /// final result = SyncDateTime.clamp(DateTime(2026, 8, 5), min, max); // 2026-08-05
+  /// final clampedMin = SyncDateTime.clamp(DateTime(2026, 7, 30), min, max); // min
+  /// ```
+  static DateTime clamp(DateTime value, DateTime min, DateTime max) =>
+      _ArithmeticHelper.clamp(value, min, max);
+}
+
+/// Shared library-private helper method to validate timezone type matching.
+void _validateTimezone(DateTime a, DateTime b) {
+  if (a.isUtc != b.isUtc) {
+    throw ArgumentError(
+      'Both DateTime instances must have the same timezone type. '
+      'a.isUtc is ${a.isUtc}, but b.isUtc is ${b.isUtc}.',
+    );
   }
+}
+
+/// Shared library-private helper to create a timezone-aware DateTime instance.
+DateTime _createDateTime({
+  required bool isUtc,
+  required int year,
+  required int month,
+  required int day,
+  int hour = 0,
+  int minute = 0,
+  int second = 0,
+  int millisecond = 0,
+  int microsecond = 0,
+}) {
+  return isUtc
+      ? DateTime.utc(year, month, day, hour, minute, second, millisecond, microsecond)
+      : DateTime(year, month, day, hour, minute, second, millisecond, microsecond);
 }

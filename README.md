@@ -171,6 +171,24 @@ As a pure **Dart** package with **zero dependencies**, `sync_datetime` runs on a
 | `differenceInSeconds(DateTime, DateTime)` | `int` | Computes whole seconds between two dates. |
 | `differenceInMilliseconds(DateTime, DateTime)` | `int` | Computes whole milliseconds between two dates. |
 
+### 6. Calendar Arithmetic & Bound Calculators
+| Method | Returns | Description |
+|---------|---------|-------------|
+| `addDays(DateTime, int)` | `DateTime` | Adds/subtracts calendar days timezone-safely. |
+| `previousDay(DateTime)` | `DateTime` | Shorthand to move 1 day backward. |
+| `nextDay(DateTime)` | `DateTime` | Shorthand to move 1 day forward. |
+| `addMonths(DateTime, int)` | `DateTime` | Adds/subtracts calendar months with valid day clamping (leap year safe). |
+| `previousMonth(DateTime)` | `DateTime` | Shorthand to move 1 month backward. |
+| `nextMonth(DateTime)` | `DateTime` | Shorthand to move 1 month forward. |
+| `addYears(DateTime, int)` | `DateTime` | Adds/subtracts calendar years (handles February 29th rollover). |
+| `previousYear(DateTime)` | `DateTime` | Shorthand to move 1 year backward. |
+| `nextYear(DateTime)` | `DateTime` | Shorthand to move 1 year forward. |
+| `addHours(DateTime, int)` | `DateTime` | Adds/subtracts hours. |
+| `addMinutes(DateTime, int)` | `DateTime` | Adds/subtracts minutes. |
+| `min(DateTime, DateTime)` | `DateTime` | Returns the earlier DateTime (throws on timezone mismatch). |
+| `max(DateTime, DateTime)` | `DateTime` | Returns the later DateTime (throws on timezone mismatch). |
+| `clamp(DateTime, DateTime, DateTime)` | `DateTime` | Clamps a DateTime between a min and max limit (throws on mismatch). |
+
 ---
 
 ## 🛠️ Detailed API Usage Examples
@@ -344,6 +362,20 @@ Standardize client-to-server operations: use `toServer` to send local inputs to 
 
 ### How do I store timestamps in SQLite?
 Convert inputs to UTC string format before database insertion using `normalizeServerTimestamp` or `toServer` to ensure clean, lexicographically sortable strings.
+
+### How do I perform calendar arithmetic (adding days, months, and years)?
+Use `addDays()`, `addMonths()`, and `addYears()` (along with their `next` and `previous` shortcuts) to shift calendar values timezone-safely and without causing leap year or invalid date rollovers (e.g., January 31st plus 1 month resolves to February 28th/29th).
+```dart
+final nextMonth = SyncDateTime.addMonths(DateTime.now(), 1);
+final nextYear = SyncDateTime.nextYear(DateTime.now());
+```
+
+### How do I clamp, min, and max DateTime instances?
+Use `min()`, `max()`, and `clamp()` to safely find boundaries. They throw an `ArgumentError` if timezone types do not match, protecting you from subtle comparison bugs.
+```dart
+final earliest = SyncDateTime.min(dateA, dateB);
+final clamped = SyncDateTime.clamp(currentDate, minDate, maxDate);
+```
 
 ---
 
