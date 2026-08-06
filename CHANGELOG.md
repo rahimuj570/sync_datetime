@@ -1,3 +1,7 @@
+## 0.2.1
+
+- Fix table of contents jump links on pub.dev by removing emojis from heading elements.
+
 ## 0.2.0
 
 - Add **Calendar Arithmetic & Boundaries** (Tier 2):

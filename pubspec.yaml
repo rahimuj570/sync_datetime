@@ -1,6 +1,6 @@
 name: sync_datetime
 description: Dart & Flutter DateTime utilities for UTC timezone conversion, ISO 8601 parsing, client-server synchronization, REST API timestamps, date calculations, and calendar math.
-version: 0.2.0
+version: 0.2.1
 repository: https://github.com/rahimuj570/sync_datetime
 
 environment:

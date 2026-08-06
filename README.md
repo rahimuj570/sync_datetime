@@ -11,22 +11,22 @@ A lightweight, dependency-free **Flutter DateTime** and **Dart DateTime** synchr
 
 ## 📚 Table of Contents
 
-* [🚀 Quick Start](#-quick-start)
-* [🎯 Why sync_datetime?](#-why-sync_datetime)
-* [💻 Ecosystem & Platform Support](#-ecosystem--platform-support)
-* [✨ Features](#-features)
-* [📚 API Reference & Utility List](#-api-reference--utility-list)
-* [🛠️ Detailed API Usage Examples](#%EF%B8%8F-detailed-api-usage-examples)
-* [🔍 Search Intent Coverage: How-To Guides](#-search-intent-coverage-how-to-guides)
-* [⚖️ Comparison: sync_datetime vs. Native Dart DateTime](#%EF%B8%8F-comparison-sync_datetime-vs-native-dart-datetime)
-* [🛡️ Best Practices & Performance Notes](#%EF%B8%8F-best-practices--performance-notes)
-* [⚠️ Common Mistakes & Troubleshooting](#%EF%B8%8F-common-mistakes--troubleshooting)
-* [🚧 Version Compatibility](#-version-compatibility)
-* [🤝 Contributing & License](#-contributing--license)
+* [🚀 Quick Start](#quick-start)
+* [🎯 Why sync_datetime?](#why-sync_datetime)
+* [💻 Ecosystem & Platform Support](#ecosystem--platform-support)
+* [✨ Features](#features)
+* [📚 API Reference & Utility List](#api-reference--utility-list)
+* [🛠️ Detailed API Usage Examples](#detailed-api-usage-examples)
+* [🔍 Search Intent Coverage: How-To Guides](#search-intent-coverage-how-to-guides)
+* [⚖️ Comparison: sync_datetime vs. Native Dart DateTime](#comparison-sync_datetime-vs-native-dart-datetime)
+* [🛡️ Best Practices & Performance Notes](#best-practices--performance-notes)
+* [⚠️ Common Mistakes & Troubleshooting](#common-mistakes--troubleshooting)
+* [🚧 Version Compatibility](#version-compatibility)
+* [🤝 Contributing & License](#contributing--license)
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -81,7 +81,7 @@ final bool isTomorrow = SyncDateTime.isTomorrow(nextDay);
 
 ---
 
-## 🎯 Why sync_datetime?
+## Why sync_datetime?
 
 Handling **DateTime** values correctly across a **Flutter** client application, **Dart** server backend, and remote database is a frequent source of bugs. Developers often run into timezone mismatches when serializing data to a **REST API**, parsing a UTC **timestamp** that lacks a timezone designator, or performing calendar calculations under Daylight Saving Time (DST) transitions.
 
@@ -100,7 +100,7 @@ At its core, `sync_datetime` focuses entirely on correctness, timezone safety, p
 
 ---
 
-## 💻 Ecosystem & Platform Support
+## Ecosystem & Platform Support
 
 ### Supported Platforms
 As a pure **Dart** package with **zero dependencies**, `sync_datetime` runs on all platforms supported by Dart and **Flutter**:
@@ -119,7 +119,7 @@ As a pure **Dart** package with **zero dependencies**, `sync_datetime` runs on a
 
 ---
 
-## ✨ Features
+## Features
 
 * **Client ↔ Server Synchronization:** Serialize, parse, normalize, and safely exchange UTC timestamps with backend services.
 * **Strict Timezone Safety:** Prevent accidental comparisons between UTC and local `DateTime` instances.
@@ -133,7 +133,7 @@ As a pure **Dart** package with **zero dependencies**, `sync_datetime` runs on a
 
 ---
 
-## 📚 API Reference & Utility List
+## API Reference & Utility List
 
 ### 1. Client-Server DateTime Synchronization
 | Method | Returns | Description |
@@ -231,7 +231,7 @@ As a pure **Dart** package with **zero dependencies**, `sync_datetime` runs on a
 
 ---
 
-## 🛠️ Detailed API Usage Examples
+## Detailed API Usage Examples
 
 ### 1. UTC Timezone Conversion & Normalization
 ```dart
@@ -271,7 +271,7 @@ final String timeStr = SyncDateTime.stripTime(DateTime.now()); // "10:20:24.380"
 
 ---
 
-## 🔍 Search Intent Coverage: How-To Guides
+## Search Intent Coverage: How-To Guides
 
 ### How do I convert local DateTime to UTC in Flutter?
 To convert local time to UTC safely without redundant transformations, use the `toUtc()` method. If the input is already in UTC, it returns unchanged.
@@ -520,7 +520,7 @@ final isEndOfDay = SyncDateTime.isEndOfDay(dateTime);
 
 ---
 
-## 🤔 Why not just use Dart's DateTime?
+## Why not just use Dart's DateTime?
 
 Dart's built-in `DateTime` is an excellent low-level API, but it intentionally leaves many application-level concerns to developers.
 
@@ -537,7 +537,7 @@ It complements `DateTime`; it does not replace it.
 
 ---
 
-## ⚖️ Comparison: sync_datetime vs. Native Dart DateTime
+## Comparison: sync_datetime vs. Native Dart DateTime
 
 | Feature / Scenario | Native Dart `DateTime` | `SyncDateTime` Utility |
 |---|---|---|
@@ -554,7 +554,7 @@ It complements `DateTime`; it does not replace it.
 
 ---
 
-## 🛡️ Best Practices & Performance Notes
+## Best Practices & Performance Notes
 
 ### Immutability & Memory Footprint
 Every API within `sync_datetime` is stateless and side-effect free. It never mutates input `DateTime` objects. This allows safe reuse of constants and variables across asynchronous operations without worrying about state drifts.
@@ -564,7 +564,7 @@ Since `copyWith` and conversion utilities are atomic, they can be safely called 
 
 ---
 
-## ⚠️ Common Mistakes & Troubleshooting
+## Common Mistakes & Troubleshooting
 
 ### Common Mistake: Comparing UTC and Local DateTime Directly
 Dart allows comparing UTC and local times using native operators (e.g. `utcTime.isBefore(localTime)`), which implicitly shifts timezones and easily hides bugs. 
@@ -576,7 +576,7 @@ When a server payload omits the UTC indicator (e.g. `2026-08-02T12:00:00`), Dart
 
 ---
 
-## 🚧 Version Compatibility
+## Version Compatibility
 
 ### SDK Compatibility
 * **Dart SDK:** `^3.9.0`
@@ -594,7 +594,7 @@ For detailed changes, view the [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
-## 🤝 Contributing & License
+## Contributing & License
 
 Contributions, bug reports, feature suggestions, and documentation improvements are always welcome.
 
