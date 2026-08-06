@@ -1,3 +1,17 @@
+## 0.2.0
+
+- Add **Calendar Arithmetic & Boundaries** (Tier 2):
+  - Added timezone-safe addition methods `addDays()`, `previousDay()`, `nextDay()`, `addMonths()`, `previousMonth()`, `nextMonth()`, `addYears()`, `previousYear()`, `nextYear()`, `addHours()`, and `addMinutes()`.
+  - Added boundary limits `min()`, `max()`, and `clamp()`.
+- Add **Validation Helpers** (Tier 3):
+  - Added relative checks `isToday()`, `isTomorrow()`, `isYesterday()`, `isPast()`, and `isFuture()`.
+  - Added range validation `isBetween()` (supporting inclusive and exclusive checks).
+  - Added precision checks `isSameHour()`, `isSameMinute()`, `isSameSecond()`, `isStartOfDay()`, and `isEndOfDay()`.
+- Add **Rounding APIs** (Tier 4):
+  - Added timezone-preserving rounding methods `floorToMinute()`, `ceilToMinute()`, `roundToMinute()`, `floorToHour()`, `ceilToHour()`, `roundToHour()`, `floorToDay()`, `ceilToDay()`, and `roundToDay()`.
+- Refactored package internal architecture into distinct, clean private helper files.
+- Expanded unit test coverage to 70 tests and updated the package example application.
+
 ## 0.1.6
 
 - Improve `fromServer` parser timezone handling logic by updating the timezone regex matching pattern.

@@ -7,6 +7,7 @@ part 'helpers/comparison_helper.dart';
 part 'helpers/difference_helper.dart';
 part 'helpers/manipulation_helper.dart';
 part 'helpers/arithmetic_helper.dart';
+part 'helpers/rounding_helper.dart';
 
 /// A utility class providing predictable and zero-boilerplate DateTime
 /// synchronization methods.
@@ -28,8 +29,7 @@ abstract final class SyncDateTime {
   /// ```
   ///
   /// Returns a new [DateTime] object with [DateTime.isUtc] set to true.
-  static DateTime toUtc(DateTime dateTime) =>
-      _ConversionHelper.toUtc(dateTime);
+  static DateTime toUtc(DateTime dateTime) => _ConversionHelper.toUtc(dateTime);
 
   /// Converts a UTC [DateTime] to a local [DateTime].
   ///
@@ -46,8 +46,7 @@ abstract final class SyncDateTime {
   /// Returns a new [DateTime] object with [DateTime.isUtc] set to false.
   ///
   /// Throws [ArgumentError] if the input [utc] does not represent a UTC time.
-  static DateTime fromUtc(DateTime utc) =>
-      _ConversionHelper.fromUtc(utc);
+  static DateTime fromUtc(DateTime utc) => _ConversionHelper.fromUtc(utc);
 
   /// Converts a [DateTime] to a UTC ISO 8601 string representation.
   ///
@@ -62,8 +61,7 @@ abstract final class SyncDateTime {
   ///
   /// Returns a string formatted like `2026-08-02T12:00:00.000Z` or
   /// `2026-08-02T12:00:00.000000Z`.
-  static String toServer(DateTime dateTime) =>
-      _ServerHelper.toServer(dateTime);
+  static String toServer(DateTime dateTime) => _ServerHelper.toServer(dateTime);
 
   /// Parses a UTC ISO 8601 string [serverUtc] from the server and converts it
   /// to local time.
@@ -114,8 +112,7 @@ abstract final class SyncDateTime {
   static DateTime fromServerParts({
     required String date,
     required String time,
-  }) =>
-      _ServerHelper.fromServerParts(date: date, time: time);
+  }) => _ServerHelper.fromServerParts(date: date, time: time);
 
   /// Combines the date components of [date] with the time components of [time].
   ///
@@ -169,8 +166,7 @@ abstract final class SyncDateTime {
   /// ```dart
   /// final today = SyncDateTime.today();
   /// ```
-  static DateTime today() =>
-      _CalendarHelper.today();
+  static DateTime today() => _CalendarHelper.today();
 
   /// Returns the start of the current UTC calendar day.
   ///
@@ -181,8 +177,7 @@ abstract final class SyncDateTime {
   /// ```dart
   /// final todayUtc = SyncDateTime.todayUtc();
   /// ```
-  static DateTime todayUtc() =>
-      _CalendarHelper.todayUtc();
+  static DateTime todayUtc() => _CalendarHelper.todayUtc();
 
   /// Returns the current UTC date and time.
   ///
@@ -195,8 +190,7 @@ abstract final class SyncDateTime {
   /// final now = SyncDateTime.nowUtc();
   /// print(now.isUtc); // true
   /// ```
-  static DateTime nowUtc() =>
-      _CalendarHelper.nowUtc();
+  static DateTime nowUtc() => _CalendarHelper.nowUtc();
 
   /// Returns a new [DateTime] set to the start of the day (00:00:00.000000)
   /// for the given [dateTime], preserving its timezone type (UTC or Local).
@@ -270,18 +264,17 @@ abstract final class SyncDateTime {
     int? second,
     int? millisecond,
     int? microsecond,
-  }) =>
-      _ManipulationHelper.copyWith(
-        dateTime,
-        year: year,
-        month: month,
-        day: day,
-        hour: hour,
-        minute: minute,
-        second: second,
-        millisecond: millisecond,
-        microsecond: microsecond,
-      );
+  }) => _ManipulationHelper.copyWith(
+    dateTime,
+    year: year,
+    month: month,
+    day: day,
+    hour: hour,
+    minute: minute,
+    second: second,
+    millisecond: millisecond,
+    microsecond: microsecond,
+  );
 
   /// Checks if [a] and [b] represent the same calendar day.
   ///
@@ -359,8 +352,7 @@ abstract final class SyncDateTime {
   /// final leap = SyncDateTime.isLeapYear(2024); // true
   /// final common = SyncDateTime.isLeapYear(2026); // false
   /// ```
-  static bool isLeapYear(int year) =>
-      _CalendarHelper.isLeapYear(year);
+  static bool isLeapYear(int year) => _CalendarHelper.isLeapYear(year);
 
   /// Computes the number of full years between [a] and [b].
   ///
@@ -629,8 +621,7 @@ abstract final class SyncDateTime {
   /// final second = DateTime(2026, 8, 4);
   /// final earlier = SyncDateTime.min(first, second); // first
   /// ```
-  static DateTime min(DateTime a, DateTime b) =>
-      _ArithmeticHelper.min(a, b);
+  static DateTime min(DateTime a, DateTime b) => _ArithmeticHelper.min(a, b);
 
   /// Returns the later of the two [DateTime] instances [a] and [b].
   ///
@@ -642,8 +633,7 @@ abstract final class SyncDateTime {
   /// final second = DateTime(2026, 8, 4);
   /// final later = SyncDateTime.max(first, second); // second
   /// ```
-  static DateTime max(DateTime a, DateTime b) =>
-      _ArithmeticHelper.max(a, b);
+  static DateTime max(DateTime a, DateTime b) => _ArithmeticHelper.max(a, b);
 
   /// Clamps the [value] to be within the range [min] to [max] inclusive.
   ///
@@ -659,6 +649,268 @@ abstract final class SyncDateTime {
   /// ```
   static DateTime clamp(DateTime value, DateTime min, DateTime max) =>
       _ArithmeticHelper.clamp(value, min, max);
+
+  /// Checks if [dateTime] is today in the same timezone (UTC or Local).
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = SyncDateTime.isToday(DateTime.now()); // true
+  /// ```
+  static bool isToday(DateTime dateTime) =>
+      _ComparisonHelper.isToday(dateTime);
+
+  /// Checks if [dateTime] is tomorrow in the same timezone (UTC or Local).
+  ///
+  /// Example:
+  /// ```dart
+  /// final tomorrow = DateTime.now().add(Duration(days: 1));
+  /// final result = SyncDateTime.isTomorrow(tomorrow); // true
+  /// ```
+  static bool isTomorrow(DateTime dateTime) =>
+      _ComparisonHelper.isTomorrow(dateTime);
+
+  /// Checks if [dateTime] is yesterday in the same timezone (UTC or Local).
+  ///
+  /// Example:
+  /// ```dart
+  /// final yesterday = DateTime.now().subtract(Duration(days: 1));
+  /// final result = SyncDateTime.isYesterday(yesterday); // true
+  /// ```
+  static bool isYesterday(DateTime dateTime) =>
+      _ComparisonHelper.isYesterday(dateTime);
+
+  /// Checks if [dateTime] is in the past compared to the current time.
+  ///
+  /// Compares local [dateTime] against local current time, and UTC [dateTime]
+  /// against UTC current time.
+  ///
+  /// Example:
+  /// ```dart
+  /// final past = DateTime.now().subtract(Duration(seconds: 1));
+  /// final result = SyncDateTime.isPast(past); // true
+  /// ```
+  static bool isPast(DateTime dateTime) =>
+      _ComparisonHelper.isPast(dateTime);
+
+  /// Checks if [dateTime] is in the future compared to the current time.
+  ///
+  /// Compares local [dateTime] against local current time, and UTC [dateTime]
+  /// against UTC current time.
+  ///
+  /// Example:
+  /// ```dart
+  /// final future = DateTime.now().add(Duration(seconds: 1));
+  /// final result = SyncDateTime.isFuture(future); // true
+  /// ```
+  static bool isFuture(DateTime dateTime) =>
+      _ComparisonHelper.isFuture(dateTime);
+
+  /// Checks if [value] is between [start] and [end].
+  ///
+  /// Throws an [ArgumentError] if the timezone types of [value], [start], or [end] mismatch.
+  /// Throws an [ArgumentError] if [start] is after [end].
+  ///
+  /// By default, [inclusive] is set to true.
+  ///
+  /// Example:
+  /// ```dart
+  /// final start = DateTime(2026, 8, 1);
+  /// final end = DateTime(2026, 8, 10);
+  /// final middle = DateTime(2026, 8, 5);
+  ///
+  /// final result1 = SyncDateTime.isBetween(middle, start, end); // true
+  /// final result2 = SyncDateTime.isBetween(end, start, end, inclusive: false); // false
+  /// ```
+  static bool isBetween(
+    DateTime value,
+    DateTime start,
+    DateTime end, {
+    bool inclusive = true,
+  }) =>
+      _ComparisonHelper.isBetween(value, start, end, inclusive: inclusive);
+
+  /// Checks if [a] and [b] represent the same hour, day, month, and year.
+  ///
+  /// Throws an [ArgumentError] if the timezone types mismatch.
+  ///
+  /// Example:
+  /// ```dart
+  /// final a = DateTime(2026, 8, 3, 14, 25);
+  /// final b = DateTime(2026, 8, 3, 14, 55);
+  /// final result = SyncDateTime.isSameHour(a, b); // true
+  /// ```
+  static bool isSameHour(DateTime a, DateTime b) =>
+      _ComparisonHelper.isSameHour(a, b);
+
+  /// Checks if [a] and [b] represent the same minute, hour, day, month, and year.
+  ///
+  /// Throws an [ArgumentError] if the timezone types mismatch.
+  ///
+  /// Example:
+  /// ```dart
+  /// final a = DateTime(2026, 8, 3, 14, 25, 10);
+  /// final b = DateTime(2026, 8, 3, 14, 25, 50);
+  /// final result = SyncDateTime.isSameMinute(a, b); // true
+  /// ```
+  static bool isSameMinute(DateTime a, DateTime b) =>
+      _ComparisonHelper.isSameMinute(a, b);
+
+  /// Checks if [a] and [b] represent the same second, minute, hour, day, month, and year.
+  ///
+  /// Throws an [ArgumentError] if the timezone types mismatch.
+  ///
+  /// Example:
+  /// ```dart
+  /// final a = DateTime(2026, 8, 3, 14, 25, 10, 100);
+  /// final b = DateTime(2026, 8, 3, 14, 25, 10, 900);
+  /// final result = SyncDateTime.isSameSecond(a, b); // true
+  /// ```
+  static bool isSameSecond(DateTime a, DateTime b) =>
+      _ComparisonHelper.isSameSecond(a, b);
+
+  /// Returns true only if the time components of [dateTime] are exactly at the start of the day.
+  ///
+  /// i.e., `00:00:00.000000`.
+  ///
+  /// Example:
+  /// ```dart
+  /// final midnight = DateTime(2026, 8, 3, 0, 0);
+  /// final result = SyncDateTime.isStartOfDay(midnight); // true
+  /// ```
+  static bool isStartOfDay(DateTime dateTime) =>
+      _ComparisonHelper.isStartOfDay(dateTime);
+
+  /// Returns true only if the time components of [dateTime] are exactly at the end of the day.
+  ///
+  /// i.e., `23:59:59.999999`.
+  ///
+  /// Example:
+  /// ```dart
+  /// final end = DateTime(2026, 8, 3, 23, 59, 59, 999, 999);
+  /// final result = SyncDateTime.isEndOfDay(end); // true
+  /// ```
+  static bool isEndOfDay(DateTime dateTime) =>
+      _ComparisonHelper.isEndOfDay(dateTime);
+
+  /// Rounds [dateTime] down to the nearest minute.
+  ///
+  /// Preserves timezone and does not mutate the original object.
+  ///
+  /// Example:
+  /// ```dart
+  /// final dt = DateTime(2026, 8, 3, 14, 52, 41, 987);
+  /// final result = SyncDateTime.floorToMinute(dt); // 14:52:00.000
+  /// ```
+  static DateTime floorToMinute(DateTime dateTime) =>
+      _RoundingHelper.floorToMinute(dateTime);
+
+  /// Rounds [dateTime] up to the nearest minute.
+  ///
+  /// If already exactly on a minute boundary, returns the original value.
+  /// Preserves timezone and does not mutate the original object.
+  ///
+  /// Example:
+  /// ```dart
+  /// final dt = DateTime(2026, 8, 3, 14, 52, 41);
+  /// final result = SyncDateTime.ceilToMinute(dt); // 14:53:00.000
+  /// ```
+  static DateTime ceilToMinute(DateTime dateTime) =>
+      _RoundingHelper.ceilToMinute(dateTime);
+
+  /// Rounds [dateTime] to the nearest minute mathematically (>= 30 seconds rounds up).
+  ///
+  /// Preserves timezone and does not mutate the original object.
+  ///
+  /// Example:
+  /// ```dart
+  /// final dt1 = DateTime(2026, 8, 3, 14, 52, 35);
+  /// final result1 = SyncDateTime.roundToMinute(dt1); // 14:53:00
+  ///
+  /// final dt2 = DateTime(2026, 8, 3, 14, 52, 25);
+  /// final result2 = SyncDateTime.roundToMinute(dt2); // 14:52:00
+  /// ```
+  static DateTime roundToMinute(DateTime dateTime) =>
+      _RoundingHelper.roundToMinute(dateTime);
+
+  /// Rounds [dateTime] down to the nearest hour.
+  ///
+  /// Preserves timezone and does not mutate the original object.
+  ///
+  /// Example:
+  /// ```dart
+  /// final dt = DateTime(2026, 8, 3, 14, 52);
+  /// final result = SyncDateTime.floorToHour(dt); // 14:00
+  /// ```
+  static DateTime floorToHour(DateTime dateTime) =>
+      _RoundingHelper.floorToHour(dateTime);
+
+  /// Rounds [dateTime] up to the nearest hour.
+  ///
+  /// If already exactly on an hour boundary, returns the original value.
+  /// Preserves timezone and does not mutate the original object.
+  ///
+  /// Example:
+  /// ```dart
+  /// final dt = DateTime(2026, 8, 3, 14, 52);
+  /// final result = SyncDateTime.ceilToHour(dt); // 15:00
+  /// ```
+  static DateTime ceilToHour(DateTime dateTime) =>
+      _RoundingHelper.ceilToHour(dateTime);
+
+  /// Rounds [dateTime] to the nearest hour mathematically (>= 30 minutes rounds up).
+  ///
+  /// Preserves timezone and does not mutate the original object.
+  ///
+  /// Example:
+  /// ```dart
+  /// final dt1 = DateTime(2026, 8, 3, 14, 35);
+  /// final result1 = SyncDateTime.roundToHour(dt1); // 15:00
+  ///
+  /// final dt2 = DateTime(2026, 8, 3, 14, 25);
+  /// final result2 = SyncDateTime.roundToHour(dt2); // 14:00
+  /// ```
+  static DateTime roundToHour(DateTime dateTime) =>
+      _RoundingHelper.roundToHour(dateTime);
+
+  /// Rounds [dateTime] down to the nearest day (equivalent to start of day).
+  ///
+  /// Preserves timezone and does not mutate the original object.
+  ///
+  /// Example:
+  /// ```dart
+  /// final dt = DateTime(2026, 8, 3, 14, 52);
+  /// final result = SyncDateTime.floorToDay(dt); // 2026-08-03 00:00:00.000
+  /// ```
+  static DateTime floorToDay(DateTime dateTime) =>
+      _RoundingHelper.floorToDay(dateTime);
+
+  /// Rounds [dateTime] up to the nearest day.
+  ///
+  /// If already exactly at the start of the day, returns the original value.
+  /// Preserves timezone and does not mutate the original object.
+  ///
+  /// Example:
+  /// ```dart
+  /// final dt = DateTime(2026, 8, 3, 13, 25);
+  /// final result = SyncDateTime.ceilToDay(dt); // 2026-08-04 00:00:00.000
+  /// ```
+  static DateTime ceilToDay(DateTime dateTime) =>
+      _RoundingHelper.ceilToDay(dateTime);
+
+  /// Rounds [dateTime] to the nearest day mathematically (>= 12:00 rounds up).
+  ///
+  /// Preserves timezone and does not mutate the original object.
+  ///
+  /// Example:
+  /// ```dart
+  /// final dt1 = DateTime(2026, 8, 3, 11, 59);
+  /// final result1 = SyncDateTime.roundToDay(dt1); // 2026-08-03 00:00:00.000
+  ///
+  /// final dt2 = DateTime(2026, 8, 3, 12, 00);
+  /// final result2 = SyncDateTime.roundToDay(dt2); // 2026-08-04 00:00:00.000
+  /// ```
+  static DateTime roundToDay(DateTime dateTime) =>
+      _RoundingHelper.roundToDay(dateTime);
 }
 
 /// Shared library-private helper method to validate timezone type matching.
@@ -684,6 +936,24 @@ DateTime _createDateTime({
   int microsecond = 0,
 }) {
   return isUtc
-      ? DateTime.utc(year, month, day, hour, minute, second, millisecond, microsecond)
-      : DateTime(year, month, day, hour, minute, second, millisecond, microsecond);
+      ? DateTime.utc(
+          year,
+          month,
+          day,
+          hour,
+          minute,
+          second,
+          millisecond,
+          microsecond,
+        )
+      : DateTime(
+          year,
+          month,
+          day,
+          hour,
+          minute,
+          second,
+          millisecond,
+          microsecond,
+        );
 }

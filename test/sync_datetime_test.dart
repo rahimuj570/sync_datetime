@@ -699,5 +699,165 @@ void main() {
         expect(() => SyncDateTime.clamp(localValIn, utcMin, localMax), throwsArgumentError);
       });
     });
+
+    group('Validation Helpers', () {
+      test('isToday, isTomorrow, isYesterday validate correctly for local and UTC', () {
+        final nowLocal = DateTime.now();
+        final nowUtc = nowLocal.toUtc();
+
+        expect(SyncDateTime.isToday(nowLocal), isTrue);
+        expect(SyncDateTime.isToday(nowUtc), isTrue);
+
+        final tomorrowLocal = nowLocal.add(Duration(days: 1));
+        final tomorrowUtc = nowUtc.add(Duration(days: 1));
+
+        expect(SyncDateTime.isTomorrow(tomorrowLocal), isTrue);
+        expect(SyncDateTime.isTomorrow(tomorrowUtc), isTrue);
+
+        final yesterdayLocal = nowLocal.subtract(Duration(days: 1));
+        final yesterdayUtc = nowUtc.subtract(Duration(days: 1));
+
+        expect(SyncDateTime.isYesterday(yesterdayLocal), isTrue);
+        expect(SyncDateTime.isYesterday(yesterdayUtc), isTrue);
+
+        expect(SyncDateTime.isToday(tomorrowLocal), isFalse);
+        expect(SyncDateTime.isTomorrow(yesterdayLocal), isFalse);
+        expect(SyncDateTime.isYesterday(nowLocal), isFalse);
+      });
+
+      test('isPast and isFuture work correctly', () {
+        final pastLocal = DateTime.now().subtract(Duration(seconds: 10));
+        final pastUtc = DateTime.now().toUtc().subtract(Duration(seconds: 10));
+        final futureLocal = DateTime.now().add(Duration(seconds: 10));
+        final futureUtc = DateTime.now().toUtc().add(Duration(seconds: 10));
+
+        expect(SyncDateTime.isPast(pastLocal), isTrue);
+        expect(SyncDateTime.isPast(pastUtc), isTrue);
+        expect(SyncDateTime.isPast(futureLocal), isFalse);
+
+        expect(SyncDateTime.isFuture(futureLocal), isTrue);
+        expect(SyncDateTime.isFuture(futureUtc), isTrue);
+        expect(SyncDateTime.isFuture(pastLocal), isFalse);
+      });
+
+      test('isBetween handles inclusion, bounds, and timezone matching', () {
+        final localStart = DateTime(2026, 8, 1);
+        final localEnd = DateTime(2026, 8, 10);
+        final localMiddle = DateTime(2026, 8, 5);
+        final utcStart = DateTime.utc(2026, 8, 1);
+
+        expect(SyncDateTime.isBetween(localMiddle, localStart, localEnd), isTrue);
+        expect(SyncDateTime.isBetween(localStart, localStart, localEnd), isTrue);
+        expect(SyncDateTime.isBetween(localEnd, localStart, localEnd), isTrue);
+        
+        // Exclusive check
+        expect(SyncDateTime.isBetween(localStart, localStart, localEnd, inclusive: false), isFalse);
+        expect(SyncDateTime.isBetween(localEnd, localStart, localEnd, inclusive: false), isFalse);
+        expect(SyncDateTime.isBetween(localMiddle, localStart, localEnd, inclusive: false), isTrue);
+
+        // Invalid boundaries
+        expect(() => SyncDateTime.isBetween(localMiddle, localEnd, localStart), throwsArgumentError);
+
+        // Timezone mismatch
+        expect(() => SyncDateTime.isBetween(localMiddle, utcStart, localEnd), throwsArgumentError);
+      });
+
+      test('isSameHour, isSameMinute, isSameSecond check time unit equality', () {
+        final a = DateTime(2026, 8, 3, 14, 25, 10, 100);
+        final b = DateTime(2026, 8, 3, 14, 25, 10, 900);
+        final c = DateTime(2026, 8, 3, 14, 25, 30);
+        final d = DateTime(2026, 8, 3, 14, 55, 30);
+        final utcA = DateTime.utc(2026, 8, 3, 14, 25, 10, 100);
+
+        expect(SyncDateTime.isSameSecond(a, b), isTrue);
+        expect(SyncDateTime.isSameSecond(a, c), isFalse);
+
+        expect(SyncDateTime.isSameMinute(a, c), isTrue);
+        expect(SyncDateTime.isSameMinute(a, d), isFalse);
+
+        expect(SyncDateTime.isSameHour(a, d), isTrue);
+
+        // Timezone mismatch
+        expect(() => SyncDateTime.isSameHour(a, utcA), throwsArgumentError);
+      });
+
+      test('isStartOfDay and isEndOfDay check boundaries', () {
+        final start = DateTime(2026, 8, 3, 0, 0);
+        final notStart = DateTime(2026, 8, 3, 0, 0, 0, 0, 1);
+        final end = DateTime(2026, 8, 3, 23, 59, 59, 999, 999);
+        final notEnd = DateTime(2026, 8, 3, 23, 59, 59, 999, 998);
+
+        expect(SyncDateTime.isStartOfDay(start), isTrue);
+        expect(SyncDateTime.isStartOfDay(notStart), isFalse);
+
+        expect(SyncDateTime.isEndOfDay(end), isTrue);
+        expect(SyncDateTime.isEndOfDay(notEnd), isFalse);
+      });
+    });
+
+    group('Rounding APIs', () {
+      test('floorToMinute rounds down, preserves timezone & immutability', () {
+        final local = DateTime(2026, 8, 3, 14, 52, 41, 987);
+        final utc = DateTime.utc(2026, 8, 3, 14, 52, 41, 987);
+
+        final floorL = SyncDateTime.floorToMinute(local);
+        expect(floorL, DateTime(2026, 8, 3, 14, 52));
+        expect(floorL.isUtc, isFalse);
+
+        final floorU = SyncDateTime.floorToMinute(utc);
+        expect(floorU, DateTime.utc(2026, 8, 3, 14, 52));
+        expect(floorU.isUtc, isTrue);
+
+        // Immutability
+        expect(local, DateTime(2026, 8, 3, 14, 52, 41, 987));
+      });
+
+      test('ceilToMinute rounds up to minute unless on boundary', () {
+        final local = DateTime(2026, 8, 3, 14, 52, 41);
+        final localBoundary = DateTime(2026, 8, 3, 14, 52);
+
+        expect(SyncDateTime.ceilToMinute(local), DateTime(2026, 8, 3, 14, 53));
+        expect(SyncDateTime.ceilToMinute(localBoundary), localBoundary);
+      });
+
+      test('roundToMinute rounds mathematically', () {
+        final up = DateTime(2026, 8, 3, 14, 52, 30);
+        final down = DateTime(2026, 8, 3, 14, 52, 29, 999);
+
+        expect(SyncDateTime.roundToMinute(up), DateTime(2026, 8, 3, 14, 53));
+        expect(SyncDateTime.roundToMinute(down), DateTime(2026, 8, 3, 14, 52));
+      });
+
+      test('floorToHour, ceilToHour, roundToHour behave correctly', () {
+        final local = DateTime(2026, 8, 3, 14, 52);
+        final boundary = DateTime(2026, 8, 3, 14, 0);
+
+        expect(SyncDateTime.floorToHour(local), DateTime(2026, 8, 3, 14));
+        expect(SyncDateTime.ceilToHour(local), DateTime(2026, 8, 3, 15));
+        expect(SyncDateTime.ceilToHour(boundary), boundary);
+
+        final roundUp = DateTime(2026, 8, 3, 14, 30);
+        final roundDown = DateTime(2026, 8, 3, 14, 29);
+
+        expect(SyncDateTime.roundToHour(roundUp), DateTime(2026, 8, 3, 15));
+        expect(SyncDateTime.roundToHour(roundDown), DateTime(2026, 8, 3, 14));
+      });
+
+      test('floorToDay, ceilToDay, roundToDay behave correctly', () {
+        final local = DateTime(2026, 8, 3, 13, 25);
+        final startOfDay = DateTime(2026, 8, 3);
+
+        expect(SyncDateTime.floorToDay(local), startOfDay);
+        
+        expect(SyncDateTime.ceilToDay(local), DateTime(2026, 8, 4));
+        expect(SyncDateTime.ceilToDay(startOfDay), startOfDay);
+
+        final roundUp = DateTime(2026, 8, 3, 12, 0);
+        final roundDown = DateTime(2026, 8, 3, 11, 59);
+
+        expect(SyncDateTime.roundToDay(roundUp), DateTime(2026, 8, 4));
+        expect(SyncDateTime.roundToDay(roundDown), startOfDay);
+      });
+    });
   });
 }

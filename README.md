@@ -34,7 +34,7 @@ Add `sync_datetime` to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  sync_datetime: ^0.1.6
+  sync_datetime: ^0.2.0
 ```
 
 Or run the pub command:
@@ -70,6 +70,13 @@ final DateTime appointment = SyncDateTime.combine(
   DateTime.now(),
   DateTime.now(),
 );
+
+// 5. Shift calendar events safely (Calendar Arithmetic)
+final DateTime nextMonth = SyncDateTime.nextMonth(appointment);
+final DateTime nextDay = SyncDateTime.nextDay(nextMonth);
+
+// 6. Validate dates easily
+final bool isTomorrow = SyncDateTime.isTomorrow(nextDay);
 ```
 
 ---
@@ -88,6 +95,8 @@ Whether you are building an **offline-first** local database or managing calenda
 * **POS & E-commerce Systems:** Standardize order timestamps, discount expiration times, and receipt dates.
 * **Chat Applications:** Sort message histories chronologically using unified UTC sorting.
 * **Healthcare Apps:** Track medication times, doctor appointments, and patient logs timezone-safely.
+
+At its core, `sync_datetime` focuses entirely on correctness, timezone safety, predictable calendar arithmetic, and client-server synchronization rather than formatting or localization. This targeted scope ensures the library remains lightweight and robust, avoiding the bloat and complexity of heavy internationalization frameworks while solving the most critical date and time issues developers face.
 
 ---
 
@@ -112,12 +121,15 @@ As a pure **Dart** package with **zero dependencies**, `sync_datetime` runs on a
 
 ## ✨ Features
 
-* **Safe UTC ⇄ Local DateTime Conversion:** Idempotent conversion utility functions ensuring UTC stays UTC and local remains local.
-* **ISO 8601 Timestamp Parsing:** Robust **parser** handles complete ISO 8601 inputs and automatically falls back to UTC if the timezone designator is omitted.
-* **Flexible DateTime Extraction:** Extract string-based date components (`yyyy-MM-dd`) and time components cleanly.
-* **DST-Proof Difference Calculators:** Compute difference metrics in days, hours, minutes, seconds, and milliseconds without daylight saving transitions causing off-by-one errors.
-* **Leap Year and Month Math:** Fetch total days in a month while factoring in leap year boundaries automatically.
-* **Zero External Dependencies:** Built strictly on top of native **Dart** SDK core libraries.
+* **Client ↔ Server Synchronization:** Serialize, parse, normalize, and safely exchange UTC timestamps with backend services.
+* **Strict Timezone Safety:** Prevent accidental comparisons between UTC and local `DateTime` instances.
+* **Calendar Arithmetic:** Add or subtract days, months, years, hours, and minutes while correctly handling leap years and month boundaries.
+* **Validation Helpers:** Easily determine whether a date is today, tomorrow, yesterday, in the past, or in the future.
+* **Comparison Utilities:** Compare dates by day, month, year, hour, minute, or second.
+* **Boundary Utilities:** Get the start/end of a day, clamp dates, find minimum/maximum values, and normalize timestamps.
+* **ISO 8601 Utilities:** Parse, normalize, split, combine, and serialize timestamps without timezone surprises.
+* **DST-Safe Difference Calculations:** Calendar-aware difference helpers that avoid daylight saving edge cases.
+* **Zero Dependencies:** Built entirely on top of the Dart SDK.
 
 ---
 
@@ -151,7 +163,7 @@ As a pure **Dart** package with **zero dependencies**, `sync_datetime` runs on a
 | `copyWith(DateTime, ...)` | `DateTime` | Creates a copy of a **DateTime** with modified fields, preserving its timezone. |
 | `combine(DateTime, DateTime)` | `DateTime` | Merges the date of one and time of another timezone-safely. |
 
-### 4. Flutter Calendar Helpers & Leap Year Utilities
+### 4. Calendar Comparison Helpers
 | Method | Returns | Description |
 |---------|---------|-------------|
 | `isSameDay(DateTime, DateTime)` | `bool` | Checks if two dates represent the same calendar day. |
@@ -188,6 +200,34 @@ As a pure **Dart** package with **zero dependencies**, `sync_datetime` runs on a
 | `min(DateTime, DateTime)` | `DateTime` | Returns the earlier DateTime (throws on timezone mismatch). |
 | `max(DateTime, DateTime)` | `DateTime` | Returns the later DateTime (throws on timezone mismatch). |
 | `clamp(DateTime, DateTime, DateTime)` | `DateTime` | Clamps a DateTime between a min and max limit (throws on mismatch). |
+
+### 7. Validation Helpers
+| Method | Returns | Description |
+|---------|---------|-------------|
+| `isToday(DateTime)` | `bool` | Checks if a date falls on the current calendar day (same timezone). |
+| `isTomorrow(DateTime)` | `bool` | Checks if a date falls on tomorrow's calendar day (same timezone). |
+| `isYesterday(DateTime)` | `bool` | Checks if a date falls on yesterday's calendar day (same timezone). |
+| `isPast(DateTime)` | `bool` | Checks if a date is in the past compared to now (same timezone). |
+| `isFuture(DateTime)` | `bool` | Checks if a date is in the future compared to now (same timezone). |
+| `isBetween(DateTime, DateTime, DateTime, {bool inclusive})` | `bool` | Checks if a value falls between start and end (throws on mismatch). |
+| `isSameHour(DateTime, DateTime)` | `bool` | Checks if two dates fall on the same calendar hour (same timezone). |
+| `isSameMinute(DateTime, DateTime)` | `bool` | Checks if two dates fall on the same calendar minute (same timezone). |
+| `isSameSecond(DateTime, DateTime)` | `bool` | Checks if two dates fall on the same calendar second (same timezone). |
+| `isStartOfDay(DateTime)` | `bool` | Checks if a date falls exactly at midnight (`00:00:00.000000`). |
+| `isEndOfDay(DateTime)` | `bool` | Checks if a date falls exactly at the end of day (`23:59:59.999999`). |
+
+### 8. Rounding APIs
+| Method | Returns | Description |
+|---------|---------|-------------|
+| `floorToMinute(DateTime)` | `DateTime` | Rounds a DateTime down to the nearest minute, preserving timezone. |
+| `ceilToMinute(DateTime)` | `DateTime` | Rounds a DateTime up to the nearest minute, preserving timezone. |
+| `roundToMinute(DateTime)` | `DateTime` | Rounds a DateTime to the nearest minute mathematically. |
+| `floorToHour(DateTime)` | `DateTime` | Rounds a DateTime down to the nearest hour, preserving timezone. |
+| `ceilToHour(DateTime)` | `DateTime` | Rounds a DateTime up to the nearest hour, preserving timezone. |
+| `roundToHour(DateTime)` | `DateTime` | Rounds a DateTime to the nearest hour mathematically. |
+| `floorToDay(DateTime)` | `DateTime` | Rounds a DateTime down to start of day, preserving timezone. |
+| `ceilToDay(DateTime)` | `DateTime` | Rounds a DateTime up to the next day's start, preserving timezone. |
+| `roundToDay(DateTime)` | `DateTime` | Rounds a DateTime to the nearest day mathematically. |
 
 ---
 
@@ -363,18 +403,119 @@ Standardize client-to-server operations: use `toServer` to send local inputs to 
 ### How do I store timestamps in SQLite?
 Convert inputs to UTC string format before database insertion using `normalizeServerTimestamp` or `toServer` to ensure clean, lexicographically sortable strings.
 
-### How do I perform calendar arithmetic (adding days, months, and years)?
-Use `addDays()`, `addMonths()`, and `addYears()` (along with their `next` and `previous` shortcuts) to shift calendar values timezone-safely and without causing leap year or invalid date rollovers (e.g., January 31st plus 1 month resolves to February 28th/29th).
+### How do I add days?
+Add or subtract calendar days timezone-safely without mutating the original object:
 ```dart
-final nextMonth = SyncDateTime.addMonths(DateTime.now(), 1);
+final fiveDaysLater = SyncDateTime.addDays(DateTime.now(), 5);
+```
+
+### How do I add months safely?
+Add months with automatic date clamping for months with fewer days:
+```dart
+final nextMonth = SyncDateTime.addMonths(DateTime(2026, 1, 31), 1); // 2026-02-28
+```
+
+### How do I add years safely?
+Add years while correctly handling leap year boundaries:
+```dart
+final leapDayPlusYear = SyncDateTime.addYears(DateTime(2024, 2, 29), 1); // 2025-02-28
+```
+
+### How do I move to next month?
+Get the exact time in the next month, clamping the day if necessary:
+```dart
+final nextMonth = SyncDateTime.nextMonth(DateTime.now());
+```
+
+### How do I move to previous month?
+Get the exact time in the previous month, clamping the day if necessary:
+```dart
+final lastMonth = SyncDateTime.previousMonth(DateTime.now());
+```
+
+### How do I move to next year?
+Get the exact time in the next year, handling leap year rollovers:
+```dart
 final nextYear = SyncDateTime.nextYear(DateTime.now());
 ```
 
-### How do I clamp, min, and max DateTime instances?
-Use `min()`, `max()`, and `clamp()` to safely find boundaries. They throw an `ArgumentError` if timezone types do not match, protecting you from subtle comparison bugs.
+### How do I clamp a DateTime?
+Clamp a DateTime to fall within the specified min and max bounds:
+```dart
+final clamped = SyncDateTime.clamp(currentDate, minDate, maxDate);
+```
+
+### How do I get min/max DateTime?
+Get the earlier or later of two timezone-compatible dates:
 ```dart
 final earliest = SyncDateTime.min(dateA, dateB);
-final clamped = SyncDateTime.clamp(currentDate, minDate, maxDate);
+final latest = SyncDateTime.max(dateA, dateB);
+```
+
+### How do I check if a date is today?
+Validate if a DateTime falls on the current calendar day:
+```dart
+final isToday = SyncDateTime.isToday(DateTime.now());
+```
+
+### How do I check if a date is tomorrow?
+Validate if a DateTime falls on tomorrow:
+```dart
+final isTomorrow = SyncDateTime.isTomorrow(tomorrowDate);
+```
+
+### How do I check if a date is yesterday?
+Validate if a DateTime falls on yesterday:
+```dart
+final isYesterday = SyncDateTime.isYesterday(yesterdayDate);
+```
+
+### How do I check if a date is in the past?
+Check if a local or UTC DateTime is in the past relative to now:
+```dart
+final wasPast = SyncDateTime.isPast(pastDate);
+```
+
+### How do I check if a date is in the future?
+Check if a local or UTC DateTime is in the future relative to now:
+```dart
+final isFuture = SyncDateTime.isFuture(futureDate);
+```
+
+### How do I check whether a date is between two dates?
+Verify if a value lies within a start and end range (supports inclusive/exclusive bounds):
+```dart
+final between = SyncDateTime.isBetween(middleDate, startDate, endDate, inclusive: true);
+```
+
+### How do I compare hours?
+Check if two timezone-compatible dates represent the same calendar hour:
+```dart
+final sameHour = SyncDateTime.isSameHour(dateA, dateB);
+```
+
+### How do I compare minutes?
+Check if two timezone-compatible dates represent the same calendar minute:
+```dart
+final sameMinute = SyncDateTime.isSameMinute(dateA, dateB);
+```
+
+### How do I compare seconds?
+Check if two timezone-compatible dates represent the same calendar second:
+```dart
+final sameSecond = SyncDateTime.isSameSecond(dateA, dateB);
+```
+
+### How do I detect start of day?
+Check if a DateTime's time components are exactly at midnight (`00:00:00.000000`):
+```dart
+final isMidnight = SyncDateTime.isStartOfDay(dateTime);
+```
+
+### How do I detect end of day?
+Check if a DateTime's time components are exactly at the end of the day (`23:59:59.999999`):
+```dart
+final isEndOfDay = SyncDateTime.isEndOfDay(dateTime);
 ```
 
 ---
@@ -401,6 +542,9 @@ It complements `DateTime`; it does not replace it.
 | Feature / Scenario | Native Dart `DateTime` | `SyncDateTime` Utility |
 |---|---|---|
 | **Ambiguous Timezones** | Silently performs implicit conversions, causing hard-to-detect bugs. | Throws strict `ArgumentError` when comparing mismatched timezones. |
+| **Calendar Arithmetic** | Native `add()` with `Duration` is unsafe for months/years due to varying length (leap years, 28/30/31 days). | Type-safe `addDays()`, `addMonths()`, `addYears()` handle calendar math correctly. |
+| **Validation Helpers** | Requires manual writing of multi-line component checks. | Native-like `isToday()`, `isTomorrow()`, `isYesterday()`, `isPast()`, and `isFuture()`. |
+| **Boundary Helpers** | Manual instantiation of matching timezone components. | Built-in `startOfDay()`, `endOfDay()`, `clamp()`, `min()`, and `max()`. |
 | **Missing Timezone Suffix** | `DateTime.parse()` assumes local timezone, distorting UTC times. | `fromServer()` assumes UTC, resolving standard REST API shapes correctly. |
 | **DST Transitions** | Math based on `Duration.inDays` returns off-by-one errors on 23/25 hour days. | `daysBetween()` normalizes dates to UTC internally, guaranteeing correct calendar offsets. |
 | **Component Cloning** | Custom builders are verbose and require manually checking timezone flags. | `copyWith()` updates fields while automatically preserving UTC/local status. |
@@ -432,7 +576,7 @@ When a server payload omits the UTC indicator (e.g. `2026-08-02T12:00:00`), Dart
 
 ---
 
-## 🛣️ Roadmap & Version Compatibility
+## 🚧 Version Compatibility
 
 ### SDK Compatibility
 * **Dart SDK:** `^3.9.0`
@@ -444,9 +588,7 @@ When a server payload omits the UTC indicator (e.g. `2026-08-02T12:00:00`), Dart
 * **Minor releases (0.Y.0):** Non-breaking API additions.
 * **Major releases (X.0.0):** Breaking changes.
 
-### Future Roadmap
-* Support for automated serialization plugins (e.g., custom adapters for `json_serializable`).
-* Performance optimized custom duration difference helpers.
+
 
 For detailed changes, view the [CHANGELOG.md](CHANGELOG.md).
 
