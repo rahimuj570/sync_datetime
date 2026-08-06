@@ -1,3 +1,7 @@
+## 0.2.2
+
+- Update README.md version installation code snippet.
+
 ## 0.2.1
 
 - Fix table of contents jump links on pub.dev by removing emojis from heading elements.
