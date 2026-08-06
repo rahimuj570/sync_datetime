@@ -21,7 +21,7 @@ A lightweight, dependency-free **Flutter DateTime** and **Dart DateTime** synchr
 * [⚖️ Comparison: sync_datetime vs. Native Dart DateTime](#%EF%B8%8F-comparison-sync_datetime-vs-native-dart-datetime)
 * [🛡️ Best Practices & Performance Notes](#%EF%B8%8F-best-practices--performance-notes)
 * [⚠️ Common Mistakes & Troubleshooting](#%EF%B8%8F-common-mistakes--troubleshooting)
-* [🛣️ Roadmap & Version Compatibility](#%EF%B8%8F-roadmap--version-compatibility)
+* [🚧 Version Compatibility](#-version-compatibility)
 * [🤝 Contributing & License](#-contributing--license)
 
 ---
